@@ -25,17 +25,16 @@ StericKernel::StericKernel() : CKernel()
     name = "Steric potential kernel";
 
     /*
-    @ARTICLE{SKKGMS,
-      author = {Kearsley, S. K. and Smith, G.M.},
-      title = {An Alternative Method for the Alignment of Molecular Structures:
-    Maximizing Electrostatic and Steric Overlap},
-      journal = {Tetrahedron Computer Methodology},
-      year = {1990},
-      volume = {3},
-      pages = {615-633},
-      number = {6C},
-      owner = {karpov},
-      timestamp = {2010.09.05}
+    @ARTICLE{VJGDASMR,
+      author = {Vinter, J.G. and Davis, A. and Saunders, M.R.},
+      title = {Strategic approaches to drug design, I. An integrated software framework
+            for molecular modelling},
+      journal = {J. Comp.-Aided Molecular Design},
+      year = {1987},
+      volume = {1},
+      pages = {31-51},
+      owner = {carpovpv},
+      timestamp = {2010.11.02}
     }
     */
 
