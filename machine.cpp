@@ -1,0 +1,184 @@
+
+/*
+ * machine.cpp
+ * Copyright (C) Carpov Pavel   2010 <carpovpv@qsar.chem.msu.ru>
+                 Baskin Igor I. 2010 <igbaskin@gmail.com>
+ *
+ * MCMF is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * MCMF is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "machine.h"
+
+#include <vector>
+#include <math.h>
+#include <algorithm>
+#include <nlopt.h>
+
+Machine::Machine(const std::string & name) : m_name(name)
+{
+    test = NULL;
+    train = NULL;
+    fres = NULL;
+}
+
+void Machine::setOutput(FILE * f)
+{
+    fres = f;
+}
+
+std::string & Machine::getName()
+{
+    return m_name;
+}
+
+void Machine::setParameters(double * h)
+{
+    for(int i =0; i< m_NumParameters; ++i)
+        Parameters[i] = h[i];
+}
+
+bool Machine::setData(SEAL *train_mols, SEAL *test_mols)
+{
+    train = train_mols;
+    test = test_mols;
+    return true;
+}
+
+double Machine::optim(unsigned, const double *m_params, double *, void *ptr)
+{
+
+    const double CV = 5;
+
+    Machine * machine = static_cast<Machine *> (ptr);
+
+    if(machine->train == NULL || machine->test == NULL)
+    {
+
+        return 0;
+    }
+
+    printf("Try: ");
+    for(int i =0; i< machine->m_NumParameters; ++i)
+        printf(" %g ", machine->Parameters[i]);
+    printf("\n");
+
+    for(int i =0; i < machine->results.size(); ++i)
+        machine->drop_result(machine->results[i]);
+
+    machine->results.clear();
+
+    const int N = machine->train->getNumberOfMolecules();
+
+    std::vector < int > mask(N);
+    std::vector < int > flags(N);
+
+    for(int i =0; i< N; ++i)
+        mask[i] = i;
+
+//  random_shuffle(mask.begin(), mask.end());
+
+    const int N_CV = ceil(1.0 * N / CV);
+
+    for(int i_cv = 0; i_cv < N; i_cv+= N_CV)
+    {
+        for(int i=0; i< flags.size(); ++i)
+            flags[i] = 1;
+
+        const int l_cv = i_cv + N_CV;
+        for(int i= i_cv; i< (l_cv < N ? l_cv : N); ++i)
+            flags[i] = 0;
+
+        int rn = 0;
+        for(int i = 0; i< N; ++i)
+        {
+            if(flags[i] == 1) rn++;
+            printf("%d ", flags[i]);
+        }
+        printf("\n");
+
+        machine->build(m_params, flags, mask);     
+    }
+
+    double s = machine->statistic();
+
+    for(int i =0; i < machine->results.size(); ++i)
+        machine->drop_result(machine->results[i]);
+
+    machine->results.clear();
+
+    return s;
+
+}
+
+struct result * Machine::create_result()
+{
+    struct result * res = new struct result;
+    res->y_real = new double [dimensionality];
+    res->y_pred = new double [dimensionality];
+    return res;
+}
+
+void Machine::drop_result(struct result * res)
+{
+    delete [] res->y_pred;
+    delete [] res->y_real;
+    delete res;
+}
+
+Machine::~Machine()
+{
+
+}
+
+bool Machine::create()
+{
+
+    nlopt_opt opt = nlopt_create(NLOPT_LN_COBYLA, m_NumParameters);
+    nlopt_set_max_objective(opt, optim, this);
+
+    nlopt_set_xtol_rel(opt, 1e-3);
+    nlopt_set_stopval(opt, 0.99);
+    nlopt_set_ftol_rel(opt, 1e-4);
+
+    nlopt_set_lower_bounds( opt, lp);
+    nlopt_set_upper_bounds( opt, mp);
+
+    double minf = 0.0;
+    int err;
+
+    mode = 0;
+
+    if ((err = nlopt_optimize(opt, Parameters, &minf)) < 0)
+    {
+        fprintf(stderr,"nlopt failed %d!\n", err);
+        exit(0);
+
+    }
+    else
+    {
+        printf("found maximum at f(" );
+        for(int i =0; i< m_NumParameters; ++i)
+            printf(" %g ", Parameters[i]);
+        printf (") = %0.10g\n", minf);
+
+        //this cause output statistic to the result file.
+        mode = 1;
+        optim(0, Parameters, NULL, this);
+
+    }
+
+    nlopt_destroy(opt);
+
+}
+
