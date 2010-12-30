@@ -25,7 +25,9 @@
 #include "../cmfa.h"
 #include "../svm.h"
 
-
+/*
+ Support Vector Regression.
+ */
 class Svr : public Machine
 {
 public:
