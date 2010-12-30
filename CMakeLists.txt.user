@@ -18,7 +18,7 @@
    <value key="ProjectExplorer.Target.ActiveBuildConfiguration" type="int">0</value>
    <value key="ProjectExplorer.Target.ActiveRunConfiguration" type="int">0</value>
    <valuemap key="ProjectExplorer.Target.BuildConfiguration.0" type="QVariantMap">
-    <value key="CMakeProjectManager.CMakeBuildConfiguration.BuildDirectory" type="QString">C:\AP\mcmf\bin</value>
+    <value key="CMakeProjectManager.CMakeBuildConfiguration.BuildDirectory" type="QString">C:\work\mcmf\git\bin</value>
     <value key="CMakeProjectManager.CMakeBuildConfiguration.MsvcVersion" type="QString"></value>
     <valuemap key="ProjectExplorer.BuildConfiguration.BuildStep.0" type="QVariantMap">
      <valuelist key="CMakeProjectManager.MakeStep.AdditionalArguments" type="QVariantList"/>
@@ -60,11 +60,11 @@
     <value key="CMakeProjectManager.BaseEnvironmentBase" type="int">2</value>
     <value key="CMakeProjectManager.CMakeRunConfiguation.Title" type="QString">MCMF</value>
     <value key="CMakeProjectManager.CMakeRunConfiguration.Arguments" type="QString"></value>
-    <value key="CMakeProjectManager.CMakeRunConfiguration.Target" type="QString">C:/AP/mcmf/bin/MCMF.exe</value>
+    <value key="CMakeProjectManager.CMakeRunConfiguration.Target" type="QString">C:/work/mcmf/git/bin/MCMF.exe</value>
     <value key="CMakeProjectManager.CMakeRunConfiguration.UseTerminal" type="bool">false</value>
     <valuelist key="CMakeProjectManager.CMakeRunConfiguration.UserEnvironmentChanges" type="QVariantList"/>
     <value key="CMakeProjectManager.CMakeRunConfiguration.UserWorkingDirectory" type="QString"></value>
-    <value key="CMakeProjectManager.CMakeRunConfiguration.WorkingDirectory" type="QString">C:/AP/mcmf/bin</value>
+    <value key="CMakeProjectManager.CMakeRunConfiguration.WorkingDirectory" type="QString">C:/work/mcmf/git/bin</value>
     <value key="ProjectExplorer.ProjectConfiguration.DisplayName" type="QString">MCMF</value>
     <value key="ProjectExplorer.ProjectConfiguration.Id" type="QString">CMakeProjectManager.CMakeRunConfiguration.</value>
    </valuemap>
@@ -72,11 +72,11 @@
     <value key="CMakeProjectManager.BaseEnvironmentBase" type="int">2</value>
     <value key="CMakeProjectManager.CMakeRunConfiguation.Title" type="QString">seal</value>
     <value key="CMakeProjectManager.CMakeRunConfiguration.Arguments" type="QString"></value>
-    <value key="CMakeProjectManager.CMakeRunConfiguration.Target" type="QString">C:/AP/mcmf/bin/seal/seal.exe</value>
+    <value key="CMakeProjectManager.CMakeRunConfiguration.Target" type="QString">C:/work/mcmf/git/bin/seal/seal.exe</value>
     <value key="CMakeProjectManager.CMakeRunConfiguration.UseTerminal" type="bool">false</value>
     <valuelist key="CMakeProjectManager.CMakeRunConfiguration.UserEnvironmentChanges" type="QVariantList"/>
     <value key="CMakeProjectManager.CMakeRunConfiguration.UserWorkingDirectory" type="QString"></value>
-    <value key="CMakeProjectManager.CMakeRunConfiguration.WorkingDirectory" type="QString">C:/AP/mcmf/bin/seal</value>
+    <value key="CMakeProjectManager.CMakeRunConfiguration.WorkingDirectory" type="QString">C:/work/mcmf/git/bin/seal</value>
     <value key="ProjectExplorer.ProjectConfiguration.DisplayName" type="QString">seal</value>
     <value key="ProjectExplorer.ProjectConfiguration.Id" type="QString">CMakeProjectManager.CMakeRunConfiguration.</value>
    </valuemap>

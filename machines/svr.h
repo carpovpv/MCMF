@@ -27,6 +27,7 @@
 
 /*
  Support Vector Regression.
+ From note.
  */
 class Svr : public Machine
 {
