@@ -22,7 +22,7 @@
 
 StericKernel::StericKernel() : CKernel()
 {
-    name = "Steric potential kernel";
+    name = "Steric";
 
     /*
     @ARTICLE{VJGDASMR,

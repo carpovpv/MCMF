@@ -3,7 +3,7 @@
 
 ElectroStaticKernel::ElectroStaticKernel() : CKernel()
 {
-    name = "Electro-Static kernel";
+    name = "Electro-Static";
 }
 
 ElectroStaticKernel::~ElectroStaticKernel()

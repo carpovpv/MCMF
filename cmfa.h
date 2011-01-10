@@ -40,6 +40,7 @@ public:
 
     void addKernel(CKernel *);
     void delKernel(CKernel *);
+    void clear();
 
     void setParameters(const double * h);
     int count() {
@@ -47,6 +48,7 @@ public:
     }
 
     void printSelKernels();
+    const char * getKernelName(int i);
 
 private:
 

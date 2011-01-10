@@ -42,8 +42,7 @@ public:
     virtual ~DescriptorFactory() ;
     virtual const std::vector < struct Descriptor > & getDescriptors(OBMol *) = 0;
     virtual bool needMapping()  const ;
-protected:
-    std::map < OBMol *, std::vector< struct Descriptor > > m_descrs;
+
 private:
     DescriptorFactory (const DescriptorFactory &);
     DescriptorFactory & operator=(const DescriptorFactory &);

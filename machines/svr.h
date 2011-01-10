@@ -35,14 +35,14 @@ public:
     Svr();
     ~Svr();
 
-    bool load(std::string & filename);
-    bool save(std::string & filename);
+    bool save(const char * filename);
 
-    bool predict(double *x, double *y);
+    bool predict(OBMol *);
     bool build(const double * params, const std::vector<int> &flags, const std::vector<int> &mask);
 
     void setCMFA( CMFA * cmfa);
     bool setData(SEAL *train_mols, SEAL *test_mols);
+    void setProps(std::vector< std::string > * props);
 
     double statistic();
 
@@ -54,7 +54,18 @@ private:
     struct svm_problem problem;
     struct svm_model * model;
 
+    int NP;
+    double SD, A;
+
     void predict_decoys();
+
+    std::vector< std::string > * m_props;
+
+    std::vector< std::vector < double > > m_data; //original data
+    std::vector< std::vector < double > > s_data; //scaled data
+
+    std::vector< double > l1, l2;
+
 
 };
 

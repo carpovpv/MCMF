@@ -22,7 +22,7 @@
 #include <iostream>
 
 
-Svr::Svr() : Machine("1-SVM")
+Svr::Svr() : Machine("SVR")
 {
     std::cout << "SVR is loaded." << std::endl;
 
@@ -43,14 +43,23 @@ Svr::Svr() : Machine("1-SVM")
     param.weight_label = NULL;
     param.weight = NULL;
 
-    //?
-    dimensionality = 1;
+    dimensionality = 1; //always 1 !!!
 
     m_NumParameters = 0;
 
     Parameters = NULL;
     lp = NULL;
     mp = NULL;
+
+    m_props = NULL;
+    NP = 0;
+
+}
+
+void Svr::setProps(std::vector<std::string> *props)
+{
+    m_props = props;
+    NP = props->size();
 
 }
 
@@ -72,15 +81,19 @@ void Svr::setCMFA(CMFA *cmfa)
     lp = (double * ) calloc(m_NumParameters , sizeof(double));
     mp = (double * ) calloc(m_NumParameters , sizeof(double));
 
-    lp[0] = 0.001, lp[1] = 1e-3;
+    lp[0] = 0.001;
+    lp[1] = 1e-3;
     for(int i =2; i< m_NumParameters; ++i)
         lp[i] = (i%2) ? 0.001 : 0.0001;
 
-    mp[0] = 0.800, mp[1] = 1e3;
+    mp[0] = 0.800;
+    mp[1] = 1e3;
     for(int i =2; i< m_NumParameters; ++i)
         mp[i] = (i%2) ? 1.0 : 0.1 ;
 
-    Parameters[0] = 0.04;
+    Parameters[0] = 0.4;
+    Parameters[1] = 0.2;
+
     for(int i =2; i< m_NumParameters; ++i)
         Parameters[i] = (i%2) ? 0.01 : 0.01 ;
 
@@ -98,14 +111,116 @@ Svr::~Svr()
 
 bool Svr::setData(SEAL *train_mols, SEAL *test_mols)
 {
+
+    if(NP != 1)
+    {
+        printf("You can model only one property.\n");
+        return false;
+    }
+
     train = train_mols;
     test = test_mols;
 
-    if(test == NULL || train == NULL)
+    if(train == NULL)
     {
-        fprintf(stderr,"Both test and train sets must be supplied.\n");
+        fprintf(stderr,"Train sets must be supplied.\n");
         return false;
     }
+
+    s_data.clear();
+    m_data.clear();
+
+    for(int i =0; i< train->getNumberOfMolecules(); ++i)
+    {
+        std::vector < double > temp;
+        for(int j=0; j< NP; ++j)
+        {
+            std::string data = train->getMolecule(i)->GetData(m_props->at(j))->GetValue();
+            temp.push_back(atof(data.c_str()));
+        }
+        m_data.push_back(temp);
+    }
+
+    printf("Dimension: %d\nLoaded: %d\n", NP, m_data.size());
+    if(m_data.size() < 10)
+    {
+        printf("Number of points for SVR must be greater than 10!\n");
+        return false;
+    }
+
+    //scale
+    std::vector< double > min_p (NP, DBL_MAX);
+    std::vector< double > max_p (NP, DBL_MIN);
+
+    for(int i = 0; i < m_data.size(); ++i)
+    {
+        for(int j =0; j< NP; ++j)
+        {
+            if(min_p[j] > m_data[i][j])
+                min_p[j] = m_data[i][j];
+            if(max_p[j] < m_data[i][j])
+                max_p[j] = m_data[i][j];
+        }
+    }
+
+    printf("Min:");
+    for(int i =0; i < NP; ++i)
+        printf(" %g", min_p[i]);
+
+    printf("\nMax:");
+    for(int i =0; i < NP; ++i)
+        printf(" %g", max_p[i]);
+
+    printf("\n");
+
+    //enlarge interval
+    const double L = 6;
+
+    /*
+
+     ----|-----|-------|-----|--------------------> x
+         l1    m1      m2    l2
+
+     m1 and m2 min and max values for the property
+     (m1 - l1) / (m2-m1) = (l2-m2)/(m2-m1) = 1.0 / L
+
+     */
+
+    l1.resize(NP);
+    l2.resize(NP);
+
+    for(int i =0; i< NP; ++i)
+    {
+        l1[i] = min_p[i] - (max_p[i] - min_p[i]) / L;
+        l2[i] = max_p[i] + (max_p[i] - min_p[i]) / L;
+    }
+
+    //scale to [0.1; 0.9]
+
+    for(int i = 0; i< m_data.size() ; ++i)
+    {
+        std::vector< double > temp(NP);
+        for(int j=0; j< NP; ++j)
+            temp[j] = 0.9 + 0.8 *(m_data[i][j] - l2[j]) / (l2[j]-l1[j]);
+
+        s_data.push_back(temp);
+    }
+
+    //calc SD for q2 metric
+    SD = 0.0;
+    A = 0.0;
+
+    for(int i =0; i< m_data.size(); ++i)
+        A += m_data[i][0];
+
+    A /= m_data.size();
+    for(int i =0; i< m_data.size(); ++i)
+    {
+        double y = m_data[i][0] - A;
+        SD += y*y;
+    }
+
+    printf("SD = %g\nA= %g\n", SD,A);
 
     return true;
 }
@@ -140,7 +255,7 @@ bool Svr::build(const double * params, const std::vector<int> &flags, const std:
 
         i_r++;
 
-        problem.y[i_r] = 1.0;
+        problem.y[i_r] = s_data[mask[i]][0];
 
         problem.x[i_r][i_r+1].value = 1.0;
         problem.x[i_r][i_r+1].index = i_r+1;
@@ -205,7 +320,8 @@ bool Svr::build(const double * params, const std::vector<int> &flags, const std:
 
         struct result * res = create_result();
         res->y_pred[0] = svm_predict(model, testing);
-        res->y_real[0] = 1.0;
+        res->y_real[0] = m_data[mask[i]][0];
+        res->y_pred[0] = l2[0] + (l2[0] - l1[0]) * (res->y_pred[0] - 0.9) / 0.8;
 
         results.push_back(res);
 
@@ -230,26 +346,28 @@ bool Svr::build(const double * params, const std::vector<int> &flags, const std:
 
 }
 
-bool Svr::load(std::string & filename)
-{
-
-}
-
-bool Svr::save(std::string &filename)
+bool Svr::save(const char * filename)
 {
 
 }
 
 double Svr::statistic()
 {
-    /*
-     One-class classification differs from other CV-methods.
-     We calculate here predictions for test decoys structrues;
-     */
-    predict_decoys();
+    //calc q2 and RMSE
+    double PRESS = 0.0;
+    for(int i=0; i< results.size(); ++i)
+    {
+       double y = (results[i]->y_real[0] - results[i]->y_pred[0]);
+       printf("%g %g\n", m_data[i][0], results[i]->y_pred[0] );
+       PRESS += y*y;
+    }
 
+    double q2 = 1.0 - PRESS / SD;
+    double RMSE = sqrt(PRESS/ results.size());
 
-    return 1.0;
+    printf("Q^2 = %g RMSE = %g\n", q2, RMSE);
+
+    return q2;
 }
 
 void Svr::predict_decoys()
@@ -359,7 +477,7 @@ void Svr::predict_decoys()
 
 }
 
-bool Svr::predict(double *x, double *y)
+bool Svr::predict(OBMol * mol)
 {
 
 }

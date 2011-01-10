@@ -1,6 +1,6 @@
 
 /*
- * fp2.cpp
+ * fp2s.cpp
  * Copyright (C) Carpov Pavel   2010 <carpovpv@qsar.chem.msu.ru>
                  Baskin Igor I. 2010 <igbaskin@gmail.com>
  *
@@ -18,31 +18,38 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "fp2.h"
+#include "fp2s.h"
 #include <openbabel/plugin.h>
 
-FingerPrints2::FingerPrints2() : m_ndescr(1024)
+FingerPrints2s::FingerPrints2s() : m_ndescr(1024)
 {
     m_ob  = OBFingerprint::FindFingerprint("FP2");
     if(m_ob == NULL)
         printf("Problem in FP2\n");
-
-
-    descrs.clear();
-    descrs.resize(m_ndescr);
 }
 
-FingerPrints2::~FingerPrints2()
+FingerPrints2s::~FingerPrints2s()
 {
+    m_descrs.clear();
 }
 
-bool FingerPrints2::needMapping() const
+bool FingerPrints2s::needMapping() const
 {
     return false;
 }
 
-const std::vector < struct Descriptor > & FingerPrints2::getDescriptors(OBMol * mol)
+const std::vector < struct Descriptor > & FingerPrints2s::getDescriptors(OBMol * mol)
 {
+    std::map < OBMol *, std::vector < struct Descriptor > >::iterator it;
+    it = m_descrs.find(mol);
+
+    if(it != m_descrs.end())
+    {
+        return m_descrs[mol];
+    }
+    //calc descrs...
+
+    std::vector< struct Descriptor> descrs(m_ndescr);
 
     std::vector< unsigned int> fp;
     m_ob->GetFingerprint(mol,fp, m_ndescr);
@@ -61,6 +68,6 @@ const std::vector < struct Descriptor > & FingerPrints2::getDescriptors(OBMol * 
         }
     }
 
-    return descrs;
+    m_descrs[mol] = descrs;
+    return m_descrs[mol];
 }
-

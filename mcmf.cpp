@@ -32,11 +32,13 @@
 #include "descfact.h"
 #include "kernels/electro.h"
 #include "descrs/fp2.h"
+#include "descrs/fp2s.h"
 #include "kernels/hydropho.h"
 #include "kernels/steric.h"
 
 #include "machine.h"
 #include "machines/oneclasssvm.h"
+#include "machines/svr.h"
 
 #include <errno.h>
 #include <boost/shared_ptr.hpp>
@@ -60,8 +62,12 @@ int main(int argc, char ** argv)
     char * sdf_train = NULL; //decoys and ligands
 
     int do_help = 0;
+    int do_prognosis = 0;
+
     char * save_model = NULL;
     char * file_res = NULL;
+
+    std::vector< std::string> props;
 
     struct option longopts[] = {
         {"sdf-train", required_argument, NULL, 't'},
@@ -72,6 +78,8 @@ int main(int argc, char ** argv)
         {"h", optional_argument, NULL, 'h'},
         {"kernel", required_argument, NULL, 'k'},
         {"machine", required_argument, NULL, 'a'},
+        {"property", optional_argument, NULL, 'p'},
+        {"prognosis", optional_argument, & do_prognosis, 1},
         {0, 0, 0, 0}
     };
 
@@ -80,7 +88,7 @@ int main(int argc, char ** argv)
     Machine * machine = NULL;
 
     //default descriptor block
-    boost::shared_ptr<FingerPrints2> fp2( new FingerPrints2());
+    boost::shared_ptr<FingerPrints2s> fp2s( new FingerPrints2s());
 
     boost::shared_ptr<CMFA> cmfa (new CMFA());
 
@@ -88,23 +96,42 @@ int main(int argc, char ** argv)
     boost::shared_ptr<HydrophobicKernel> hydrophobic (new HydrophobicKernel());
     boost::shared_ptr<StericKernel> steric (new StericKernel());
 
-    boost::shared_ptr<GaussKernel> gauss( new GaussKernel(fp2.get()));
-    boost::shared_ptr<TanimotoKernel > tanimoto (new TanimotoKernel(fp2.get()));
+    boost::shared_ptr<GaussKernel> gauss( new GaussKernel(fp2s.get()));
+    boost::shared_ptr<TanimotoKernel > tanimoto (new TanimotoKernel(fp2s.get()));
 
     double usep [MAX_PARAMS];
     double * userp = usep;
 
-    usep[0] = 0.04;
-    for(int i =1; i< MAX_PARAMS; ++i)
-        usep[i] = (i%2) ? 0.001 : 0.2 ;
+    for(int i =0; i< MAX_PARAMS; ++i)
+        usep[i] = UNKNOWN_VALUE;
 
     int c;
-    while( (c = getopt_long(argc, argv, "a:t:v:m:r:k:", longopts, NULL)) != -1)
+    while( (c = getopt_long(argc, argv, "a:t:v:m:r:k:p:", longopts, NULL)) != -1)
     {
         double k;
         char *p;
+        char prop[1024];
+        int i =0;
+
         switch(c)
         {
+        case 'p':
+            p = optarg;
+            do
+            {
+                i = 0;
+                while(*p!='\0' && *p != ',')
+                    prop[i++] = *p++;
+                prop[i]='\0';
+                props.push_back(prop);
+
+            }while(*p++!='\0');
+
+            printf("Properties:\n");
+            for(i=0; i< props.size(); ++i)
+                printf("\t%s\n", props[i].c_str());
+
+            break;
         case 'k':
             if(!strcmp(optarg,"electrostatic"))
                 cmfa->addKernel(electro.get());
@@ -140,6 +167,19 @@ int main(int argc, char ** argv)
                 OneClassSVM * svm_1 = new OneClassSVM();
                 svm_1->setCMFA(cmfa.get());
                 machine = svm_1;
+            }
+            else if(!strcmp(optarg, "svr"))
+            {
+                if(machine != NULL)
+                {
+                    fprintf(stderr,"Several machines are not supported.\n");
+                    return EX_USAGE;
+                }
+
+                Svr * svr = new Svr();
+                svr->setCMFA(cmfa.get());
+                svr->setProps(&props);
+                machine = svr;
             }
             else
             {
@@ -211,6 +251,121 @@ int main(int argc, char ** argv)
         return 0;
     }
 
+    if(do_prognosis)
+    {
+
+        boost::shared_ptr<FingerPrints2> fp2( new FingerPrints2());
+        gauss->setDescriptorFactory(fp2.get());
+        tanimoto->setDescriptorFactory(fp2.get());
+
+
+        cmfa->clear();
+        if(machine!=NULL)
+            delete machine;
+
+        std::string modelmdl = std::string(save_model) + ".mdl";
+
+        std::ifstream fp(modelmdl.c_str());
+        if(!fp)
+        {
+            fprintf(stderr, "Supply a model please.\n");
+            return 0;
+        }
+        std::string model;
+        fp >> model;
+        fp >> model;
+
+        if(model == "1-SVM")
+        {
+            OneClassSVM * svm_1 = new OneClassSVM();
+            machine = svm_1;
+            svm_1->setCMFA(cmfa.get());
+            fp >> model;
+            double ot;
+
+            fp >> ot;
+            svm_1->setThreshold(ot);
+
+        }
+        else
+        {
+            fprintf(stderr, "Unknown machine.\n");
+            return EX_USAGE;
+        }
+
+        int nk = 0;
+        fp >> model;
+        fp >> nk;
+
+        for(int i=0; i< nk; i++)
+        {
+            fp >> model;
+            if(model == "Gaussian")
+                cmfa->addKernel(gauss.get());
+            else if(model == "Tanimoto")
+                cmfa->addKernel(tanimoto.get());
+            else if(model == "Electro-Static")
+                cmfa->addKernel(electro.get());
+            else if(model == "Steric")
+                cmfa->addKernel(steric.get());
+            else if(model == "Hydrophobic")
+                cmfa->addKernel(hydrophobic.get());
+        }
+
+        fp >> model;
+        fp >> nk;
+
+        for(int i =0; i< nk; i++)
+            fp >> usep[i];
+
+        machine->init();
+        machine->setParameters(usep);
+
+        std::ifstream sdf(sdf_test);
+        if(!sdf)
+        {
+            fprintf(stderr,"Please, select a file with structures to do the prognosis.\n");
+            return 0;
+        }
+
+        std::string modelfile = std::string(save_model) + ".svm";
+
+        if(!machine->load(modelfile.c_str()))
+        {
+            return EX_USAGE;
+        }
+
+        fp >> model;
+        fp >> model;
+
+        cmfa->printSelKernels();
+
+        model = std::string(save_model) + ".sdf";
+
+        boost::shared_ptr<SEAL> mdl(new SEAL(model.c_str()));
+        mdl->go();
+
+        machine->setData(mdl.get(), mdl.get());
+
+        //prediction
+        OBMol mol;
+        obconversion.SetInFormat("SDF");
+        obconversion.SetInStream(&sdf);
+
+        while(obconversion.Read(&mol))
+        {
+            mol.DeleteHydrogens();
+            machine->predict(&mol);
+
+        }
+
+        sdf.close();
+        fp.close();
+        return 0;
+    }
+
+    //building a model
+
     if(cmfa->count() == 0)
     {
         fprintf(stderr,"Select a kernel please.\n");
@@ -234,7 +389,7 @@ int main(int argc, char ** argv)
 
     try
     {
-        train = new SEAL(sdf_train);
+        train = new SEAL(sdf_train, &props);
     }
     catch(std::exception &exc)
     {
@@ -268,9 +423,12 @@ int main(int argc, char ** argv)
         return EX_USAGE;
 
     machine->setOutput(fres);
+    machine->init();
+
     machine->setParameters(usep);
     machine->create();
 
+    machine->save(save_model);
 
     if(fres != NULL) fclose(fres);
 

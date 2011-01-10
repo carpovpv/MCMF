@@ -1,6 +1,6 @@
 
 /*
- * seal.h
+ * fp2s.h
  * Copyright (C) Carpov Pavel   2010 <carpovpv@qsar.chem.msu.ru>
                  Baskin Igor I. 2010 <igbaskin@gmail.com>
  *
@@ -18,47 +18,29 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _SEAL
-#define _SEAL
+#ifndef __FP2s_H
+#define __FP2s_H
 
-#include <openbabel/obconversion.h>
-#include <openbabel/mol.h>
-#include <vector>
+#include "../descfact.h"
+#include <openbabel/fingerprint.h>
+
 
 using namespace OpenBabel;
 
-class SEAL
+class FingerPrints2s : public DescriptorFactory
 {
 public:
-    SEAL(const char * sdf, const std::vector<std::string> * props = NULL);
-    SEAL(std::ifstream * ifs, const std::vector<std::string> * props = NULL, int mn = -1);
 
-    virtual ~SEAL();
-    void go();
-
-    int getNumberOfMolecules() const;
-    OBMol * getMolecule(int);
+    FingerPrints2s();
+    ~FingerPrints2s();
+    bool needMapping() const;
+    const std::vector < struct Descriptor > & getDescriptors(OBMol *);
 
 private:
-    SEAL (const SEAL &);
-    SEAL & operator=(const SEAL &);
 
-
-    static const int  optim = 1000;
-    void readStructures(std::ifstream * ifs, const std::vector< std::string> * props, int mn);
-
-    virtual void align();
-
-protected:
-    OBConversion * conv;
-
-    static const bool debug = true;
-
-    std::vector <OBMol> mols;
-    std::vector <OBMol> m_mols;
-
+    std::map < OBMol * , std::vector< struct Descriptor > > m_descrs;
+    const unsigned int m_ndescr;
+    OBFingerprint * m_ob;
 };
 
-
 #endif
-

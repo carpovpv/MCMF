@@ -33,14 +33,17 @@ public:
     OneClassSVM();
     ~OneClassSVM();
 
-    bool load(std::string & filename);
-    bool save(std::string & filename);
+    bool save(const char *filename);
 
-    bool predict(double *x, double *y);
+    bool load(const char * filename);
+    bool predict(OBMol *);
     bool build(const double * params, const std::vector<int> &flags, const std::vector<int> &mask);
 
     void setCMFA( CMFA * cmfa);
     bool setData(SEAL *train_mols, SEAL *test_mols);
+    void setThreshold(double ot);
+
+    void init();
 
     double statistic();
 
@@ -57,6 +60,10 @@ private:
     struct svm_parameter param;
     struct svm_problem problem;
     struct svm_model * model;
+
+    struct svm_model * real_model;
+
+    double m_threshold;
 
     void predict_decoys();
 

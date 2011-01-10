@@ -45,7 +45,8 @@ std::string & Machine::getName()
 void Machine::setParameters(double * h)
 {
     for(int i =0; i< m_NumParameters; ++i)
-        Parameters[i] = h[i];
+        if(h[i] != UNKNOWN_VALUE)
+            Parameters[i] = h[i];
 }
 
 bool Machine::setData(SEAL *train_mols, SEAL *test_mols)
@@ -62,7 +63,7 @@ double Machine::optim(unsigned, const double *m_params, double *, void *ptr)
 
     Machine * machine = static_cast<Machine *> (ptr);
 
-    if(machine->train == NULL || machine->test == NULL)
+    if(machine->train == NULL)
     {
 
         return 0;
@@ -70,7 +71,7 @@ double Machine::optim(unsigned, const double *m_params, double *, void *ptr)
 
     printf("Try: ");
     for(int i =0; i< machine->m_NumParameters; ++i)
-        printf(" %g ", machine->Parameters[i]);
+        printf(" %g ", m_params[i]);
     printf("\n");
 
     for(int i =0; i < machine->results.size(); ++i)
@@ -86,7 +87,7 @@ double Machine::optim(unsigned, const double *m_params, double *, void *ptr)
     for(int i =0; i< N; ++i)
         mask[i] = i;
 
-//  random_shuffle(mask.begin(), mask.end());
+   // random_shuffle(mask.begin(), mask.end());
 
     const int N_CV = ceil(1.0 * N / CV);
 
@@ -144,7 +145,7 @@ Machine::~Machine()
 bool Machine::create()
 {
 
-    nlopt_opt opt = nlopt_create(NLOPT_LN_COBYLA, m_NumParameters);
+    nlopt_opt opt = nlopt_create(NLOPT_LN_BOBYQA, m_NumParameters);
     nlopt_set_max_objective(opt, optim, this);
 
     nlopt_set_xtol_rel(opt, 1e-3);
@@ -153,6 +154,10 @@ bool Machine::create()
 
     nlopt_set_lower_bounds( opt, lp);
     nlopt_set_upper_bounds( opt, mp);
+
+    for(int i = 0; i< m_NumParameters; ++i)
+        printf("%g <=  %g  <= %g\n", lp[i], Parameters[i], mp[i]);
+
 
     double minf = 0.0;
     int err;

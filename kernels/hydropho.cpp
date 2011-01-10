@@ -22,7 +22,7 @@
 
 HydrophobicKernel::HydrophobicKernel() : CKernel()
 {
-    name =  "Hydrophobic kernel";
+    name =  "Hydrophobic";
     /*
     @ARTICLE{hydropobicity,
       author = {Viswanadhan, V.N. and Ghose, A.K. and Revankar, G.R., and Robins,

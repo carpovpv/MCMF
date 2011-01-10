@@ -24,12 +24,13 @@
 #include <string>
 #include "seal/seal.h"
 
+#define UNKNOWN_VALUE 666
+
 struct result
 {
     double * y_real;
     double * y_pred;
 };
-
 
 class Machine
 {
@@ -41,20 +42,22 @@ public:
     virtual bool setData(SEAL * train_mols, SEAL * test_mols);
     virtual double statistic() = 0;
 
-    virtual bool save(std::string & filename) = 0;
-    virtual bool load(std::string & filename) = 0;
+    virtual bool load(const char * filename) {}
+    virtual bool save(const char * filename) = 0;
 
     virtual bool build(const double * params,
                        const std::vector< int > & flags,
                        const std::vector<int > & mask) = 0;
 
-    virtual bool predict( double *x, double *y) = 0;
+    virtual bool predict(OBMol *) = 0;
 
     void setParameters(double *);
     void setOutput(FILE *);
 
     static double optim(unsigned, const double *m_params, double *, void * ptr);
     bool create();
+
+    virtual void init() {}
 
     std::string & getName();
 

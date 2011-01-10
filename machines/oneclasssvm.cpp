@@ -20,6 +20,8 @@
 
 #include "oneclasssvm.h"
 #include <iostream>
+#include <fstream>
+#include "../svm.h"
 
 int OneClassSVM::res_comp(struct res_auc  p1, struct res_auc  p2)
 {
@@ -63,30 +65,7 @@ void OneClassSVM::setCMFA(CMFA *cmfa)
     m_cmfa = cmfa;
     m_cmfa->printSelKernels();
 
-    if(lp != NULL)
-    {
-        free(lp);
-        free(mp);
-        free(Parameters);
-    }
 
-    m_NumParameters = cmfa->count() *2;
-
-    Parameters = (double * ) calloc(m_NumParameters , sizeof(double));
-    lp = (double * ) calloc(m_NumParameters , sizeof(double));
-    mp = (double * ) calloc(m_NumParameters , sizeof(double));
-
-    lp[0] = 0.001;
-    for(int i =1; i< m_NumParameters; ++i)
-        lp[i] = (i%2) ? 0.0001 : 0.001;
-
-    mp[0] = 0.800;
-    for(int i =1; i< m_NumParameters; ++i)
-        mp[i] = (i%2) ? 0.1 : 1.0 ;
-
-    Parameters[0] = 0.04;
-    for(int i =1; i< m_NumParameters; ++i)
-        Parameters[i] = (i%2) ? 0.01 : 0.01 ;
 
 }
 
@@ -112,6 +91,34 @@ bool OneClassSVM::setData(SEAL *train_mols, SEAL *test_mols)
     }
 
     return true;
+}
+
+void OneClassSVM::init()
+{
+    if(lp != NULL)
+    {
+        free(lp);
+        free(mp);
+        free(Parameters);
+    }
+
+    m_NumParameters = m_cmfa->count() *2;
+
+    Parameters = (double * ) calloc(m_NumParameters , sizeof(double));
+    lp = (double * ) calloc(m_NumParameters , sizeof(double));
+    mp = (double * ) calloc(m_NumParameters , sizeof(double));
+
+    lp[0] = 0.001;
+    for(int i =1; i< m_NumParameters; ++i)
+        lp[i] = (i%2) ? 0.0001 : 0.001;
+
+    mp[0] = 0.800;
+    for(int i =1; i< m_NumParameters; ++i)
+        mp[i] = (i%2) ? 0.3 : 1.0 ;
+
+    Parameters[0] = 0.04;
+    for(int i =1; i< m_NumParameters; ++i)
+        Parameters[i] = (i%2) ? 0.01 : 0.01 ;
 }
 
 bool OneClassSVM::build(const double * params, const std::vector<int> &flags, const std::vector<int> &mask)
@@ -232,14 +239,121 @@ bool OneClassSVM::build(const double * params, const std::vector<int> &flags, co
 
 }
 
-bool OneClassSVM::load(std::string & filename)
+void OneClassSVM::setThreshold(double ot)
 {
-
+    m_threshold = ot;
 }
 
-bool OneClassSVM::save(std::string &filename)
+bool OneClassSVM::save(const char * filename)
 {
+    std::string modelname = std::string(filename) + ".mdl";
+    std::ofstream fp(modelname.c_str());
+    if(fp)
+    {
+        fp << "Machine: " << getName() << std::endl;
+        fp << "Threshold: " << m_threshold << std::endl;
 
+        fp << "Kernels: " << m_cmfa->count() << std::endl;
+
+        for(int i =0; i< m_cmfa->count(); ++i)
+            fp << m_cmfa->getKernelName(i) << " ";
+
+        fp << std::endl;
+
+        fp << "Parameters: " << m_NumParameters << std::endl;
+        for(int i=0; i< m_NumParameters; ++i)
+            fp << Parameters[i] << " ";
+        fp << std::endl;
+
+        param.nu = Parameters[0];
+        const int N = train->getNumberOfMolecules();
+
+        problem.l = N;
+
+        problem.y = (double *) calloc(N , sizeof(double));
+        problem.x = (struct svm_node **) calloc(N, sizeof(struct svm_node*));
+
+        for(int i= 0; i< N; ++i)
+            problem.x[i] = (struct svm_node *) calloc(N +2, sizeof(struct svm_node));
+
+        int i_r = -1;
+
+        for(int i =0; i< N; ++i)
+        {
+            i_r++;
+
+            problem.y[i_r] = 1.0;
+
+            problem.x[i_r][i_r+1].value = 1.0;
+            problem.x[i_r][i_r+1].index = i_r+1;
+
+            problem.x[i_r][0].value = i_r+1;
+            problem.x[i_r][0].index = 0;
+
+            problem.x[i_r][N+1].value = 0.0;
+            problem.x[i_r][N+1].index = -1;
+
+            int j_r = i_r;
+            for(int j=i+1; j< N; ++j)
+            {
+                OBMol *mol1 = train->getMolecule(i);
+                OBMol *mol2 = train->getMolecule(j);
+
+                double K = m_cmfa->calculate(mol1, mol2);
+
+                j_r++;
+                problem.x[i_r][j_r+1].value = problem.x[j_r][i_r+1].value = K;
+
+                problem.x[i_r][j_r+1].index = j_r+1;
+                problem.x[j_r][i_r+1].index = i_r+1;
+
+            }
+        }
+
+        model = svm_train(&problem, &param);
+
+        std::string model_name = std::string(filename) + ".svm";
+        svm_save_model(model_name.c_str(), model);
+
+        svm_free_and_destroy_model(&model);
+        svm_destroy_param(&param);
+
+        for(int i =0; i< N; ++i)
+        {
+            free(problem.x[i]);
+            problem.x[i] = NULL;
+        }
+
+        free(problem.x);
+        problem.x = NULL;
+
+        free(problem.y);
+        problem.y = NULL;
+
+        fp << "Structures: " << train->getNumberOfMolecules() << std::endl;
+
+        /*OBConversion conv(NULL, &fp);
+        conv.SetOutFormat("SDF");
+        for(int i =0; i< train->getNumberOfMolecules(); ++i)
+            conv.Write(train->getMolecule(i));
+        */
+    }
+
+    fp.close();
+}
+
+bool OneClassSVM::load(const char *filename)
+{
+    //SVM
+    real_model = svm_load_model(filename);
+
+    if(real_model == NULL)
+    {
+        fprintf(stderr, "Problem loading SVM-model.");
+        return false;
+    }
+
+    return true;
 }
 
 double OneClassSVM::statistic()
@@ -404,12 +518,14 @@ double OneClassSVM::statistic()
         double tpr = tp / (tp + fn);
 
         fprintf(fres, "\n%.2f %.4f ", AUC, ot);
-        fprintf(fres, " %.0f %.0f %.0f %.0f %.2f %.2f ", tn, tp, fn, fp, 100 * tn/(tn+fp),100 * tp/(tp+fn));
+        fprintf(fres, " %.4f %.0f %.0f %.0f %.0f %.2f %.2f ", ot, tn, tp, fn, fp, 100 * tn/(tn+fp),100 * tp/(tp+fn));
 
         for(int i =0; i< m_NumParameters; ++i)
             fprintf(fres, " %g ", Parameters[i]);
 
-        }
+        m_threshold = ot;
+
+    }
 
     return AUC;
 }
@@ -417,8 +533,6 @@ double OneClassSVM::statistic()
 void OneClassSVM::predict_decoys()
 {
     param.nu = Parameters[0];
-
-    int rn = 0;
     const int N = train->getNumberOfMolecules();
 
     problem.l = N;
@@ -504,7 +618,7 @@ void OneClassSVM::predict_decoys()
 
     free(testing);
 
-    for(int i =0; i< rn; ++i)
+    for(int i =0; i< N; ++i)
     {
         free(problem.x[i]);
         problem.x[i] = NULL;
@@ -521,7 +635,40 @@ void OneClassSVM::predict_decoys()
 
 }
 
-bool OneClassSVM::predict(double *x, double *y)
+bool OneClassSVM::predict(OBMol * mol)
 {
+    m_cmfa->setParameters(Parameters + 1);
+
+    const int N = train->getNumberOfMolecules();
+    struct svm_node * testing = (struct svm_node *) calloc(N+2 , sizeof(struct svm_node));
+
+    testing[0].value = 1;
+    testing[0].index = 0;
+
+    testing[N+1].value = 0.0;
+    testing[N+1].index = -1;
+
+    int i_p = 0;
+    for(int j=0; j< N; ++j)
+    {
+
+        OBMol *mol2 = train->getMolecule(j);
+        double K = m_cmfa->calculate(mol, mol2);
+
+        //printf("K: %g\n", K);
+
+        testing[i_p+1].value = K;
+        testing[i_p+1].index = i_p+1;
+
+        i_p++;
+
+    }
+
+    double y  = svm_predict(real_model, testing);
+
+    printf("%d %g\n", y > m_threshold ? 1 : 0 ,  y);
+
+    free(testing);
+
 
 }

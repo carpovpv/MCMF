@@ -65,6 +65,19 @@ void CMFA::addKernel(CKernel * kernel)
         m_kernels.push_back(kernel);
 }
 
+void CMFA::clear()
+{
+    for(int i = m_kernels.size() -1; i>=0; --i)
+        m_kernels.erase( m_kernels.begin() + i);
+}
+
+const char * CMFA::getKernelName(int i)
+{
+    if(i >= m_kernels.size())
+        return NULL;
+    return m_kernels[i]->getName();
+}
+
 void CMFA::delKernel(CKernel * kernel)
 {
     for(int i = m_kernels.size() -1; i>=0; --i)

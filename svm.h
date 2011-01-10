@@ -1,6 +1,8 @@
 #ifndef _LIBSVM_H
 #define _LIBSVM_H
 
+#include <fstream>
+
 #define LIBSVM_VERSION 300
 
 #ifdef __cplusplus

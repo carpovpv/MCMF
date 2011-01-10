@@ -38,6 +38,8 @@ public:
 
 private:
 
+    std::vector < struct Descriptor > descrs;
+
     const unsigned int m_ndescr;
     OBFingerprint * m_ob;
 };

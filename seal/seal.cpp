@@ -29,7 +29,7 @@
 
 using namespace OpenBabel;
 
-SEAL::SEAL(const char * sdf)
+SEAL::SEAL(const char * sdf,  const std::vector<std::string> * props)
 {
 
     std::ifstream ifs(sdf);
@@ -39,25 +39,51 @@ SEAL::SEAL(const char * sdf)
         throw std::runtime_error("File with structures not found!");
     }
 
-    conv = new OBConversion(&ifs, &std::cout);
+    readStructures(&ifs, props,-1);
+
+    ifs.close();
+}
+
+SEAL::SEAL(std::ifstream *ifs, const std::vector<std::string> *props, int mn)
+{
+    readStructures(ifs, props, mn);
+}
+
+void SEAL::readStructures(std::ifstream *ifs, const std::vector<std::string> *props, int mn)
+{
+    conv = new OBConversion(ifs, &std::cout);
     conv->SetInAndOutFormats("SDF","SDF");
 
     if (debug)
-        std::cerr <<  "Reding the database into memory..." << std::endl;
+        std::cerr <<  "Reading the database into memory..." << std::endl;
 
     OBMol mol;
     int i=0;
-    while (conv->Read(&mol) )
+    while ( conv->Read(&mol) )
     {
+        i++;
+        if( mn > 0 && i > mn  )
+            break;
+        bool add = true;
+        if(props)
+        {
+            for(int j=0; j< props->size(); ++j)
+            {
+                if(!mol.HasData(props->at(j)))
+                    add = false;
+            }
+        }
 
-        mol.DeleteHydrogens();
-        mols.push_back(mol);
+        if(add)
+        {
+           mol.DeleteHydrogens();
+           mols.push_back(mol);
+        }
+
     }
 
     if (debug)
-        std::cerr << "Done reading." << std::endl;
-
-    ifs.close();
+        std::cerr << "Done reading " << mols.size()  << "." << std::endl;
 }
 
 void SEAL::go()

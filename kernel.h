@@ -60,6 +60,8 @@ public:
         return name.c_str();
     }
 
+    void setDescriptorFactory(DescriptorFactory *f) { m_descrfactory = f;}
+
 protected:
 
     std::string name;

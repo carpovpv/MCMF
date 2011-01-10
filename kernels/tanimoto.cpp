@@ -23,7 +23,7 @@
 
 TanimotoKernel::TanimotoKernel(DescriptorFactory * descr) : CKernel( descr)
 {
-    name =  "Tanimoto kernel";
+    name =  "Tanimoto";
     m_remap = descr != NULL ? descr->needMapping() : false;
 }
 

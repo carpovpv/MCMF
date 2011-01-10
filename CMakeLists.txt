@@ -20,6 +20,7 @@ set (HEADERS
 	seal/ks_seal.h
 	seal/seal.h
         descrs/fp2.h
+        descrs/fp2s.h
         machines/oneclasssvm.h
         machines/svr.h
 )
@@ -38,6 +39,7 @@ set (SOURCE
 	seal/ks_seal.cpp
 	seal/seal.cpp
 	descrs/fp2.cpp
+        descrs/fp2s.cpp
         machines/oneclasssvm.cpp
         machines/svr.cpp
         )
