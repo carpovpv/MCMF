@@ -35,6 +35,7 @@
 #include "descrs/fp2s.h"
 #include "kernels/hydropho.h"
 #include "kernels/steric.h"
+#include "kernels/linear.h"
 
 #include "machine.h"
 #include "machines/oneclasssvm.h"
@@ -95,6 +96,7 @@ int main(int argc, char ** argv)
     boost::shared_ptr<ElectroStaticKernel> electro (new ElectroStaticKernel());
     boost::shared_ptr<HydrophobicKernel> hydrophobic (new HydrophobicKernel());
     boost::shared_ptr<StericKernel> steric (new StericKernel());
+    boost::shared_ptr<LinearKernel> linear (new LinearKernel(fp2s.get()));
 
     boost::shared_ptr<GaussKernel> gauss( new GaussKernel(fp2s.get()));
     boost::shared_ptr<TanimotoKernel > tanimoto (new TanimotoKernel(fp2s.get()));
@@ -139,6 +141,8 @@ int main(int argc, char ** argv)
                 cmfa->addKernel(hydrophobic.get());
             else if(!strcmp(optarg, "steric"))
                 cmfa->addKernel(steric.get());
+            else if(!strcmp(optarg, "linear"))
+                cmfa->addKernel(linear.get());
             else if(!strcmp(optarg, "mcmf"))
             {
                 cmfa->addKernel(electro.get());
@@ -310,6 +314,8 @@ int main(int argc, char ** argv)
                 cmfa->addKernel(steric.get());
             else if(model == "Hydrophobic")
                 cmfa->addKernel(hydrophobic.get());
+            else if(model == "Linear")
+                cmfa->addKernel(linear.get());
         }
 
         fp >> model;

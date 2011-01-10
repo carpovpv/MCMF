@@ -17,6 +17,7 @@ set (HEADERS
 	kernels/hydropho.h
 	kernels/steric.h
 	kernels/tanimoto.h
+        kernels/linear.h
 	seal/ks_seal.h
 	seal/seal.h
         descrs/fp2.h
@@ -36,6 +37,7 @@ set (SOURCE
 	kernels/hydropho.cpp
 	kernels/steric.cpp
 	kernels/tanimoto.cpp
+        kernels/linear.cpp
 	seal/ks_seal.cpp
 	seal/seal.cpp
 	descrs/fp2.cpp
