@@ -23,6 +23,7 @@
 
 #include <string>
 #include "seal/seal.h"
+#include <nlopt.h>
 
 #define UNKNOWN_VALUE 666
 
@@ -55,7 +56,9 @@ public:
     void setOutput(FILE *);
 
     static double optim(unsigned, const double *m_params, double *, void * ptr);
-    bool create();
+
+    double create(nlopt_algorithm algo = NLOPT_LN_BOBYQA);
+    double create_random();
 
     virtual void init() {}
 

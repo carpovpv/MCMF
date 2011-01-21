@@ -528,7 +528,7 @@ double HydrophobicKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma)
 
             if(hydrophobicity.find(k) != hydrophobicity.end()) w2 = hydrophobicity[k];
             else w2 = 0;
-            s += w1 * w2 * exp ( -gamma / 2 * ( pow((a->x() - b->x()), 2) + pow((a->y() - b->y()), 2)  + pow((a->z() - b->z()), 2)  ));
+            s += w1 * w2 * exp ( -gamma / 4.0 * ( pow((a->x() - b->x()), 2) + pow((a->y() - b->y()), 2)  + pow((a->z() - b->z()), 2)  ));
         }
     }
 

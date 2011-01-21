@@ -163,9 +163,9 @@ double StericKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma)
             double x = a->x() - b->x();
             double y = a->y() - b->y();
             double z = a->z() - b->z();
-            s += w * exp ( -gamma/2 * ( x*x + y*y +z*z  ) );
+            s += w * exp ( -gamma/4.0 * ( x*x + y*y +z*z  ) );
         }
     }
-    return s / w2;
+    return s / sqrt(w2);
 }
 

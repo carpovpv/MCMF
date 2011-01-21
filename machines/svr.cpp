@@ -21,6 +21,7 @@
 #include "svr.h"
 #include <iostream>
 
+#define GNUPLOT "gnuplot -persist"
 
 Svr::Svr() : Machine("SVR")
 {
@@ -54,6 +55,10 @@ Svr::Svr() : Machine("SVR")
     m_props = NULL;
     NP = 0;
 
+    gp = popen(GNUPLOT,"w"); /* 'gp' is the pipe descriptor */
+    if(gp == NULL)
+        fprintf(stderr, "Error init gnuplot\n");
+
 }
 
 void Svr::setProps(std::vector<std::string> *props)
@@ -84,18 +89,18 @@ void Svr::setCMFA(CMFA *cmfa)
     lp[0] = 0.001;
     lp[1] = 1e-3;
     for(int i =2; i< m_NumParameters; ++i)
-        lp[i] = (i%2) ? 0.001 : 0.0001;
+        lp[i] = (i%2) ? 0 : 0.00001;
 
-    mp[0] = 0.800;
-    mp[1] = 1e3;
+    mp[0] = 0.999;
+    mp[1] = 5.000;
     for(int i =2; i< m_NumParameters; ++i)
-        mp[i] = (i%2) ? 1.0 : 0.1 ;
+        mp[i] = (i%2) ? 1.0 : 10 ;
 
     Parameters[0] = 0.4;
     Parameters[1] = 0.2;
 
     for(int i =2; i< m_NumParameters; ++i)
-        Parameters[i] = (i%2) ? 0.01 : 0.01 ;
+        Parameters[i] = (i%2) ? 0.0001 : 0.0001 ;
 
 }
 
@@ -107,6 +112,8 @@ Svr::~Svr()
         free(mp);
         free(Parameters);
     }
+    if(gp !=  NULL)
+        pclose(gp);
 }
 
 bool Svr::setData(SEAL *train_mols, SEAL *test_mols)
@@ -191,8 +198,8 @@ bool Svr::setData(SEAL *train_mols, SEAL *test_mols)
 
     for(int i =0; i< NP; ++i)
     {
-        l1[i] = min_p[i] - (max_p[i] - min_p[i]) / L;
-        l2[i] = max_p[i] + (max_p[i] - min_p[i]) / L;
+        l1[i] = min_p[i];// - (max_p[i] - min_p[i]) / L;
+        l2[i] = max_p[i];// + (max_p[i] - min_p[i]) / L;
     }
 
     //scale to [0.1; 0.9]
@@ -355,19 +362,47 @@ double Svr::statistic()
 {
     //calc q2 and RMSE
     double PRESS = 0.0;
-    for(int i=0; i< results.size(); ++i)
+
+    double r = 0.0;
+    double xx = 0.0;
+    double yy = 0.0;
+    double x2 = 0.0;
+    double y2 = 0.0;
+    double xy = 0.0;
+
+    const int n = results.size();
+
+    FILE * fp = fopen("temp","w");
+
+    for(int i=0; i< n; ++i)
     {
-       double y = (results[i]->y_real[0] - results[i]->y_pred[0]);
-       printf("%g %g\n", m_data[i][0], results[i]->y_pred[0] );
+       double y = (m_data[i][0] - results[i]->y_pred[0]);
+       fprintf(fp,"%g %g\n", m_data[i][0], results[i]->y_pred[0] );
        PRESS += y*y;
+
+       xy += m_data[i][0] *  results[i]->y_pred[0];
+       xx += m_data[i][0];
+       yy += results[i]->y_pred[0];
+       x2 += m_data[i][0] * m_data[i][0];
+       y2 += results[i]->y_pred[0] *results[i]->y_pred[0];
+
     }
+
+    fclose(fp);
+
+    fprintf(gp, "plot 'temp', x\n");
+
+    fflush(gp);
 
     double q2 = 1.0 - PRESS / SD;
     double RMSE = sqrt(PRESS/ results.size());
 
-    printf("Q^2 = %g RMSE = %g\n", q2, RMSE);
+    r = (n * xy - xx * yy) / ( sqrt(n*x2 - xx*xx) * sqrt(n*y2 - yy*yy));
 
-    return q2;
+
+    printf("Q^2 = %g RMSE = %g R = %g R^2 = %g\n", q2, RMSE, r, r*r);
+
+    return -RMSE;
 }
 
 void Svr::predict_decoys()

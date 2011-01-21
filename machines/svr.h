@@ -66,7 +66,7 @@ private:
 
     std::vector< double > l1, l2;
 
-
+    FILE * gp;
 };
 
 #endif // SVR_H

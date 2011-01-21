@@ -108,7 +108,7 @@ int main(int argc, char ** argv)
         usep[i] = UNKNOWN_VALUE;
 
     int c;
-    while( (c = getopt_long(argc, argv, "a:t:v:m:r:k:p:", longopts, NULL)) != -1)
+    while( (c = getopt_long(argc, argv, "a:t:v:m:r:k:p:h", longopts, NULL)) != -1)
     {
         double k;
         char *p;
@@ -432,7 +432,7 @@ int main(int argc, char ** argv)
     machine->init();
 
     machine->setParameters(usep);
-    machine->create();
+    machine->create_random();
 
     machine->save(save_model);
 

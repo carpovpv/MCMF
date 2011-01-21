@@ -34,7 +34,7 @@ double ElectroStaticKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma)
             double y2 = b->y();
             double z2 = b->z();
 
-            s += q2 * exp( -gamma / 2.0 * ( (x1-x2) * (x1-x2) + (y1-y2)*(y1-y2) + (z1 -z2) * (z1-z2) ));
+            s += q2 * exp( -gamma / 4.0 * ( (x1-x2) * (x1-x2) + (y1-y2)*(y1-y2) + (z1 -z2) * (z1-z2) ));
 
         }
         s *= q1;

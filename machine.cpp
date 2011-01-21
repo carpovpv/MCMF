@@ -59,7 +59,6 @@ bool Machine::setData(SEAL *train_mols, SEAL *test_mols)
 double Machine::optim(unsigned, const double *m_params, double *, void *ptr)
 {
 
-    const double CV = 5;
 
     Machine * machine = static_cast<Machine *> (ptr);
 
@@ -68,6 +67,9 @@ double Machine::optim(unsigned, const double *m_params, double *, void *ptr)
 
         return 0;
     }
+    const int N = machine->train->getNumberOfMolecules();
+
+    const double CV = N;
 
     printf("Try: ");
     for(int i =0; i< machine->m_NumParameters; ++i)
@@ -79,7 +81,6 @@ double Machine::optim(unsigned, const double *m_params, double *, void *ptr)
 
     machine->results.clear();
 
-    const int N = machine->train->getNumberOfMolecules();
 
     std::vector < int > mask(N);
     std::vector < int > flags(N);
@@ -87,7 +88,7 @@ double Machine::optim(unsigned, const double *m_params, double *, void *ptr)
     for(int i =0; i< N; ++i)
         mask[i] = i;
 
-   // random_shuffle(mask.begin(), mask.end());
+    //random_shuffle(mask.begin(), mask.end());
 
     const int N_CV = ceil(1.0 * N / CV);
 
@@ -104,9 +105,9 @@ double Machine::optim(unsigned, const double *m_params, double *, void *ptr)
         for(int i = 0; i< N; ++i)
         {
             if(flags[i] == 1) rn++;
-            printf("%d ", flags[i]);
+            //printf("%d ", flags[i]);
         }
-        printf("\n");
+        //printf("\n");
 
         machine->build(m_params, flags, mask);     
     }
@@ -142,13 +143,41 @@ Machine::~Machine()
 
 }
 
-bool Machine::create()
+double Machine::create(nlopt_algorithm algo)
 {
+    //grid search
+/*
+    FILE * fp = fopen("grid.search", "w");
 
-    nlopt_opt opt = nlopt_create(NLOPT_LN_BOBYQA, m_NumParameters);
+    double nu = 0.4;
+    //for(double nu = 0.001; nu < 0.8; nu += 0.05)
+      for(double c = 1e-5; c< 10; c*=10)
+    {
+        for(double g = 0.001; g < 0.2; g+=0.01)
+        {
+
+            Parameters[0] = nu;
+            Parameters[1] = c;
+            Parameters[2] = g;
+
+            double q = optim(0, Parameters, NULL, this);
+
+            fprintf(fp, "%g %g %g %g\n", nu,c , g, q);
+            fflush(fp);
+
+        }
+        //fprintf(fp,"\n");
+
+    }
+    fclose(fp);
+
+    return true;
+*/
+
+    nlopt_opt opt = nlopt_create(algo, m_NumParameters);
     nlopt_set_max_objective(opt, optim, this);
 
-    nlopt_set_xtol_rel(opt, 1e-3);
+    nlopt_set_xtol_rel(opt, 1e-4);
     nlopt_set_stopval(opt, 0.99);
     nlopt_set_ftol_rel(opt, 1e-4);
 
@@ -184,6 +213,58 @@ bool Machine::create()
     }
 
     nlopt_destroy(opt);
+
+    return minf;
+
+}
+
+double Machine::create_random()
+{
+
+      const int max_iter = 100;
+
+      double *best_params = (double *) calloc(m_NumParameters,sizeof(double));
+      double best_rmse = RAND_MAX;
+
+      for(int i=0; i< m_NumParameters; ++i)
+          best_params[i] = Parameters[i];
+
+      int iter = 0;
+
+      srand(time(NULL));
+
+      while(iter++<max_iter)
+      {
+           double temp = create();
+           temp *= -1.0;
+
+           if(temp < best_rmse)
+           {
+               for(int i=0; i< m_NumParameters; ++i)
+                   best_params[i] = Parameters[i];
+               best_rmse = temp;
+           }
+
+           for(int i=0; i< m_NumParameters; ++i)
+               Parameters[i] = lp[i] + (mp[i] - lp[i]) / (1.00 * RAND_MAX) * rand();
+
+      }
+
+      for(int i =0; i< m_NumParameters; ++i)
+          Parameters[i] = best_params[i];
+
+      create(NLOPT_LN_NELDERMEAD);
+
+      for(int i=0; i< m_NumParameters; ++i)
+          best_params[i] = Parameters[i];
+
+      printf("Final:\n");
+      printf("found maximum at f(" );
+      for(int i =0; i< m_NumParameters; ++i)
+          printf(" %g ", best_params[i]);
+      printf (") = %0.10g\n", best_rmse);
+
+      free(best_params);
 
 }
 
