@@ -10,7 +10,7 @@ class StericKernel: public CKernel
 public:
     StericKernel();
     virtual ~StericKernel();
-    virtual double calculate(OBMol *, OBMol *, double );
+    virtual double calculate(OBMol *, OBMol *, double , bool norm = false);
     double steric(int atom1, int atom2);
 
 private:

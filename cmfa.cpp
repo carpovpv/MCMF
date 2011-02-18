@@ -22,10 +22,17 @@
 
 CMFA::CMFA()
 {
+    m_norm = false;
 }
 
 CMFA::~CMFA()
 {
+
+}
+
+void CMFA::setNormalise(bool norm)
+{
+    m_norm = norm;
 
 }
 
@@ -37,11 +44,18 @@ double CMFA::calculate(OBMol *mol1, OBMol * mol2)
     int i=0;
     for( ; i< m_kernels.size() -1; ++i)
     {
-        s+= m_h[i*2 +1] * m_kernels[i]->calculate(mol1, mol2, m_h[i*2]);
+        CKernel * kernel = m_kernels[i];
+        double p = kernel->calculate(mol1, mol2, m_h[i*2], m_norm);
+
+        s+= m_h[i*2 +1] * p;
         hh+=m_h[i*2+1];
     }
 
-    s+= (1.0- hh) * m_kernels[m_kernels.size() -1]->calculate(mol1, mol2, m_h[i*2]);
+    CKernel * kernel = m_kernels[m_kernels.size() -1];
+    double p = kernel->calculate(mol1, mol2, m_h[i*2], m_norm);
+
+    s+= (1.0- hh) * p;
+
     return s;
 
 }
@@ -76,6 +90,12 @@ const char * CMFA::getKernelName(int i)
     if(i >= m_kernels.size())
         return NULL;
     return m_kernels[i]->getName();
+}
+
+void CMFA::clearNorms()
+{
+    for(int i =0; i< m_kernels.size(); ++i)
+        m_kernels[i]->clearNorms();
 }
 
 void CMFA::delKernel(CKernel * kernel)

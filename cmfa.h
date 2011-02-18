@@ -47,14 +47,19 @@ public:
         return m_kernels.size();
     }
 
+    void setNormalise(bool norm=true);
+
     void printSelKernels();
     const char * getKernelName(int i);
+
+    void clearNorms();
 
 private:
 
     std::vector< CKernel * > m_kernels;
 
     const double * m_h;
+    bool m_norm;
 
     CMFA (const CMFA &);
     CMFA & operator=(const CMFA &);

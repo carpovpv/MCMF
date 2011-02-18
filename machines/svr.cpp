@@ -20,6 +20,7 @@
 
 #include "svr.h"
 #include <iostream>
+#include <map>
 
 #define GNUPLOT "gnuplot -persist"
 
@@ -152,7 +153,7 @@ bool Svr::setData(SEAL *train_mols, SEAL *test_mols)
     if(m_data.size() < 10)
     {
         printf("Number of points for SVR must be greater than 10!\n");
-        return false;
+        //return false;
     }
 
     //scale
@@ -252,7 +253,7 @@ bool Svr::build(const double * params, const std::vector<int> &flags, const std:
     problem.x = (struct svm_node **) calloc(rn, sizeof(struct svm_node*));
 
     for(int i= 0; i< rn; ++i)
-        problem.x[i] = (struct svm_node *) calloc(rn +2, sizeof(struct svm_node));
+        problem.x[i] = (struct svm_node *) calloc(rn+2, sizeof(struct svm_node));
 
     int i_r = -1;
 
@@ -264,18 +265,18 @@ bool Svr::build(const double * params, const std::vector<int> &flags, const std:
 
         problem.y[i_r] = s_data[mask[i]][0];
 
-        problem.x[i_r][i_r+1].value = 1.0;
-        problem.x[i_r][i_r+1].index = i_r+1;
-
-        problem.x[i_r][0].value = i_r+1;
+        //first element
+        problem.x[i_r][0].value = i_r+1.0;
         problem.x[i_r][0].index = 0;
 
+        //last element
         problem.x[i_r][rn+1].value = 0.0;
         problem.x[i_r][rn+1].index = -1;
 
         int j_r = i_r;
-        for(int j=i+1; j< N; ++j)
+        for(int j=i; j< N; ++j) //j=i+1;
         {
+
             if(flags[j] == 0) continue;
 
             OBMol *mol1 = train->getMolecule(mask[i]);
@@ -283,12 +284,13 @@ bool Svr::build(const double * params, const std::vector<int> &flags, const std:
 
             double K = m_cmfa->calculate(mol1, mol2);
 
-            j_r++;
-            problem.x[i_r][j_r+1].value = problem.x[j_r][i_r+1].value = K;
+            problem.x[i_r][j_r+1].value = K;
+            problem.x[j_r][i_r+1].value = K;
 
-            problem.x[i_r][j_r+1].index = j_r+1;
             problem.x[j_r][i_r+1].index = i_r+1;
+            problem.x[i_r][j_r+1].index = j_r+1;
 
+            j_r++;
         }
     }
 
@@ -323,7 +325,9 @@ bool Svr::build(const double * params, const std::vector<int> &flags, const std:
 
             i_p++;
 
-        }
+        }                
+
+
 
         struct result * res = create_result();
         res->y_pred[0] = svm_predict(model, testing);
@@ -402,6 +406,8 @@ double Svr::statistic()
 
     printf("Q^2 = %g RMSE = %g R = %g R^2 = %g\n", q2, RMSE, r, r*r);
 
+    //m_cmfa->clearNorms();
+
     return -RMSE;
 }
 
@@ -438,7 +444,7 @@ void Svr::predict_decoys()
         problem.x[i_r][N+1].index = -1;
 
         int j_r = i_r;
-        for(int j=i+1; j< N; ++j)
+        for(int j=i; j< N; ++j)
         {
             OBMol *mol1 = train->getMolecule(i);
             OBMol *mol2 = train->getMolecule(j);

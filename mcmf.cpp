@@ -432,6 +432,8 @@ int main(int argc, char ** argv)
     machine->init();
 
     machine->setParameters(usep);
+    cmfa->setNormalise(false);
+
     machine->create_random();
 
     machine->save(save_model);

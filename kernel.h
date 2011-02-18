@@ -24,6 +24,8 @@
 #include <openbabel/mol.h>
 #include "descfact.h"
 #include <string>
+#include <math.h>
+#include <map>
 
 /*!
   The abstract class for kernel representation. Simple kernels should
@@ -31,6 +33,8 @@
   CMFA class. The  DescriptorFactory calculetes specific  descriptors
   for the molecule, then the Kernel computes the similarity.
 */
+
+#define COEFF  (sqrt((M_PI * M_PI * M_PI) / gamma / gamma / gamma))
 
 class CKernel
 {
@@ -51,7 +55,7 @@ public:
       Returns the similarity between two molecules within the field.
     */
 
-    virtual double calculate(OBMol *, OBMol *, double ) = 0;
+    virtual double calculate(OBMol *, OBMol *, double, bool norm = false ) = 0;
 
     /*!
        Return the name of a kernel.
@@ -60,6 +64,8 @@ public:
         return name.c_str();
     }
 
+    void clearNorms() {norms.clear();}
+
     void setDescriptorFactory(DescriptorFactory *f) { m_descrfactory = f;}
 
 protected:
@@ -67,6 +73,9 @@ protected:
     std::string name;
 
     DescriptorFactory * m_descrfactory;
+
+    std::map < OBMol *, double> norms;
+
 
 };
 

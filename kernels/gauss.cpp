@@ -30,7 +30,7 @@ GaussKernel::~GaussKernel()
 {
 }
 
-double GaussKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma)
+double GaussKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma, bool norm)
 {
     if(m_remap)
     {

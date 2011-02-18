@@ -146,10 +146,9 @@ StericKernel::~StericKernel()
 {
 }
 
-double StericKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma)
+double StericKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma, bool norm)
 {
     double s = 0.0;
-    double w2 = 0.0;
 
     FOR_ATOMS_OF_MOL(a, mol1)
     {
@@ -158,14 +157,29 @@ double StericKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma)
             int i1 = a->GetAtomicNum();
             int i2 = b->GetAtomicNum();
             double w = steric(i1, i2);
-            w2 += w*w;
 
             double x = a->x() - b->x();
             double y = a->y() - b->y();
             double z = a->z() - b->z();
+
             s += w * exp ( -gamma/4.0 * ( x*x + y*y +z*z  ) );
         }
     }
-    return s / sqrt(w2);
+    if(norm)
+    {
+
+       if(norms.find(mol1) == norms.end())
+       {
+           norms[mol1] = calculate(mol1, mol1, gamma, false);
+       }
+
+       if(norms.find(mol2) == norms.end())
+       {
+           norms[mol2] = calculate(mol2, mol2, gamma, false);
+       }
+
+       s = s/ sqrt(norms[mol1] * norms[mol2]);
+    }
+    return COEFF * s;
 }
 

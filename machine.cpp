@@ -81,7 +81,6 @@ double Machine::optim(unsigned, const double *m_params, double *, void *ptr)
 
     machine->results.clear();
 
-
     std::vector < int > mask(N);
     std::vector < int > flags(N);
 
@@ -227,6 +226,9 @@ double Machine::create_random()
       double best_rmse = RAND_MAX;
 
       for(int i=0; i< m_NumParameters; ++i)
+          Parameters[i] = lp[i] + (mp[i] - lp[i]) / (1.00 * RAND_MAX) * rand();
+
+      for(int i=0; i< m_NumParameters; ++i)
           best_params[i] = Parameters[i];
 
       int iter = 0;
@@ -235,7 +237,8 @@ double Machine::create_random()
 
       while(iter++<max_iter)
       {
-           double temp = create();
+           //double temp = create();
+           double temp = optim(0, Parameters,NULL, this);
            temp *= -1.0;
 
            if(temp < best_rmse)

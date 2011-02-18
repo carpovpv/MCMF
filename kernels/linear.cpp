@@ -5,7 +5,7 @@ LinearKernel::LinearKernel(DescriptorFactory * descr) : CKernel( descr)
     name = "Linear";
 }
 
-double LinearKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma)
+double LinearKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma, bool norm)
 {
     const std::vector< struct Descriptor>  m1 = m_descrfactory->getDescriptors(mol1);
     const std::vector< struct Descriptor>  m2 = m_descrfactory->getDescriptors(mol2);

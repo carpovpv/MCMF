@@ -22,13 +22,15 @@
 #define __ELECTRO_H
 
 #include "../kernel.h"
+#include <map>
 
 class ElectroStaticKernel: public CKernel
 {
 public:
     ElectroStaticKernel();
     virtual ~ElectroStaticKernel();
-    virtual double calculate(OBMol *, OBMol *, double );
+    virtual double calculate(OBMol *, OBMol *, double, bool norm = false );
+
 };
 
 #endif

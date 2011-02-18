@@ -493,57 +493,46 @@ HydrophobicKernel::~HydrophobicKernel()
 {
 }
 
-double HydrophobicKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma)
+double HydrophobicKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma, bool norm)
 {
-    double w1 = 0.0;
-    double w2 = 0.0;
-    double  s = 0.0;
 
-    double w12 = 0.0;
-    double w22 = 0.0;
+    double  s = 0.0;
+    double w1,w2;
 
     FOR_ATOMS_OF_MOL(a, mol1)
     {
         int l = 0;
-        if(cache.find(&*a) == cache.end())
-        {
-            l = get_hydrophobicity(&*a);
-            cache[&*a] = l;
-        }
-        else l = cache[&*a];
+        l = get_hydrophobicity(&*a);
 
         if(hydrophobicity.find(l) != hydrophobicity.end()) w1 = hydrophobicity[l];
         else w1 = 0;
-        w12 += w1 * w1;
 
         FOR_ATOMS_OF_MOL(b, mol2)
         {
             int k = 0;
-            if(cache.find(&*b) == cache.end())
-            {
-                k = get_hydrophobicity(&*b);
-                cache[&*b] = k;
-            }
-            else k = cache[&*b];
+            k = get_hydrophobicity(&*b);
 
             if(hydrophobicity.find(k) != hydrophobicity.end()) w2 = hydrophobicity[k];
             else w2 = 0;
             s += w1 * w2 * exp ( -gamma / 4.0 * ( pow((a->x() - b->x()), 2) + pow((a->y() - b->y()), 2)  + pow((a->z() - b->z()), 2)  ));
         }
     }
-
-    FOR_ATOMS_OF_MOL(b, mol2)
+    if(norm)
     {
-        int k = get_hydrophobicity(&*b);
-        if(hydrophobicity.find(k) != hydrophobicity.end()) w2 = hydrophobicity[k];
-        else w2 = 0;
-        w22 += w2 * w2;
+
+       if(norms.find(mol1) == norms.end())
+       {
+           norms[mol1] = calculate(mol1, mol1, gamma, false);
+       }
+
+       if(norms.find(mol2) == norms.end())
+       {
+           norms[mol2] = calculate(mol2, mol2, gamma, false);
+       }
+
+       s = s/ sqrt(norms[mol1] * norms[mol2]);
     }
-
-    w12 = sqrt(w12);
-    w22 = sqrt(w22);
-
-    return s / (w12 * w22);
+    return s * COEFF;
 
 }
 
