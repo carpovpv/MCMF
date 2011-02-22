@@ -26,6 +26,7 @@
 #include <stdexcept>
 
 #include "seal.h"
+#include "../fields.h"
 
 using namespace OpenBabel;
 
@@ -35,9 +36,7 @@ SEAL::SEAL(const char * sdf,  const std::vector<std::string> * props)
     std::ifstream ifs(sdf);
 
     if (!ifs)
-    {
         throw std::runtime_error("File with structures not found!");
-    }
 
     readStructures(&ifs, props,-1);
 
@@ -92,6 +91,17 @@ void SEAL::go()
         mols[i].Center();
 
     align();
+
+    for(int i =0; i< m_mols.size(); ++i)
+    {
+        OBAtom *atom;
+        FOR_ATOMS_OF_MOL(atom, m_mols[i])
+        {
+            Fields * ff = new Fields();
+            ff->calcValues(&*atom);
+            atom->SetData(ff);
+        }
+    }
 }
 
 OBMol * SEAL::getMolecule(int p)

@@ -31,12 +31,13 @@
 #include "kernels/tanimoto.h"
 #include "descfact.h"
 #include "kernels/electro.h"
-#include "descrs/fp2.h"
 #include "descrs/fp2s.h"
 #include "kernels/hydropho.h"
 #include "kernels/steric.h"
 #include "kernels/linear.h"
-
+#include "kernels/hydrophov.h"
+#include "kernels/sterick.h"
+#include "kernels/abraham.h"
 #include "machine.h"
 #include "machines/oneclasssvm.h"
 #include "machines/svr.h"
@@ -64,6 +65,7 @@ int main(int argc, char ** argv)
 
     int do_help = 0;
     int do_prognosis = 0;
+    int do_norm = 1;
 
     char * save_model = NULL;
     char * file_res = NULL;
@@ -81,6 +83,7 @@ int main(int argc, char ** argv)
         {"machine", required_argument, NULL, 'a'},
         {"property", optional_argument, NULL, 'p'},
         {"prognosis", optional_argument, & do_prognosis, 1},
+        {"norm", optional_argument, & do_norm, 1},
         {0, 0, 0, 0}
     };
 
@@ -98,6 +101,10 @@ int main(int argc, char ** argv)
     boost::shared_ptr<StericKernel> steric (new StericKernel());
     boost::shared_ptr<LinearKernel> linear (new LinearKernel(fp2s.get()));
 
+    boost::shared_ptr<HydrophobicKernelV> hydrophobicv (new HydrophobicKernelV());
+    boost::shared_ptr<StericKernelK> sterick (new StericKernelK());
+    boost::shared_ptr<AbrahamKernel> abraham (new AbrahamKernel());
+
     boost::shared_ptr<GaussKernel> gauss( new GaussKernel(fp2s.get()));
     boost::shared_ptr<TanimotoKernel > tanimoto (new TanimotoKernel(fp2s.get()));
 
@@ -111,9 +118,9 @@ int main(int argc, char ** argv)
     while( (c = getopt_long(argc, argv, "a:t:v:m:r:k:p:h", longopts, NULL)) != -1)
     {
         double k;
-        char *p;
+        char *p, *s;
         char prop[1024];
-        int i =0;
+        int i =0,l;
 
         switch(c)
         {
@@ -135,28 +142,46 @@ int main(int argc, char ** argv)
 
             break;
         case 'k':
-            if(!strcmp(optarg,"electrostatic"))
-                cmfa->addKernel(electro.get());
-            else if(!strcmp(optarg, "hydrophobic"))
-                cmfa->addKernel(hydrophobic.get());
-            else if(!strcmp(optarg, "steric"))
-                cmfa->addKernel(steric.get());
-            else if(!strcmp(optarg, "linear"))
-                cmfa->addKernel(linear.get());
-            else if(!strcmp(optarg, "mcmf"))
+            sprintf(prop,"%s", optarg);
+            s = p = prop;
+            l=0;
+            while(true)
             {
-                cmfa->addKernel(electro.get());
-                cmfa->addKernel(hydrophobic.get());
-                cmfa->addKernel(steric.get());
-            }
-            else if(!strcmp(optarg, "gauss"))
-                cmfa->addKernel(gauss.get());
-            else if(!strcmp(optarg, "tanimoto"))
-                cmfa->addKernel(tanimoto.get());
-            else
-            {
-                fprintf(stderr,"Unknown kernel.\n");
-                return EX_USAGE;
+                if(*p == ',' || *p == '\0')
+                {
+                    if(*p=='\0') l = 1;
+
+                    *p='\0';
+                    p++;
+                    if(!strcmp(s,"electrostatic"))
+                        cmfa->addKernel(electro.get());
+                    else if(!strcmp(s, "hydrophobic"))
+                        cmfa->addKernel(hydrophobic.get());
+                    else if(!strcmp(s, "steric"))
+                        cmfa->addKernel(steric.get());
+                    else if(!strcmp(s, "linear"))
+                        cmfa->addKernel(linear.get());
+                    else if(!strcmp(s, "gauss"))
+                        cmfa->addKernel(gauss.get());
+                    else if(!strcmp(s, "tanimoto"))
+                        cmfa->addKernel(tanimoto.get());
+                    else if(!strcmp(s, "hydrophobicv"))
+                        cmfa->addKernel(hydrophobicv.get());
+                    else if(!strcmp(s, "sterick"))
+                        cmfa->addKernel(sterick.get());
+                    else if(!strcmp(s,"abraham"))
+                        cmfa->addKernel(abraham.get());
+                    else
+                    {
+                        fprintf(stderr,"Unknown kernel %s.\n", s);
+                        return EX_USAGE;
+                    }
+                    s = p;
+                    if(l)
+                        break;
+                }
+                else
+                    p++;
             }
             break;
         case 'a':
@@ -255,121 +280,6 @@ int main(int argc, char ** argv)
         return 0;
     }
 
-    if(do_prognosis)
-    {
-
-        boost::shared_ptr<FingerPrints2> fp2( new FingerPrints2());
-        gauss->setDescriptorFactory(fp2.get());
-        tanimoto->setDescriptorFactory(fp2.get());
-
-
-        cmfa->clear();
-        if(machine!=NULL)
-            delete machine;
-
-        std::string modelmdl = std::string(save_model) + ".mdl";
-
-        std::ifstream fp(modelmdl.c_str());
-        if(!fp)
-        {
-            fprintf(stderr, "Supply a model please.\n");
-            return 0;
-        }
-        std::string model;
-        fp >> model;
-        fp >> model;
-
-        if(model == "1-SVM")
-        {
-            OneClassSVM * svm_1 = new OneClassSVM();
-            machine = svm_1;
-            svm_1->setCMFA(cmfa.get());
-            fp >> model;
-            double ot;
-
-            fp >> ot;
-            svm_1->setThreshold(ot);
-
-        }
-        else
-        {
-            fprintf(stderr, "Unknown machine.\n");
-            return EX_USAGE;
-        }
-
-        int nk = 0;
-        fp >> model;
-        fp >> nk;
-
-        for(int i=0; i< nk; i++)
-        {
-            fp >> model;
-            if(model == "Gaussian")
-                cmfa->addKernel(gauss.get());
-            else if(model == "Tanimoto")
-                cmfa->addKernel(tanimoto.get());
-            else if(model == "Electro-Static")
-                cmfa->addKernel(electro.get());
-            else if(model == "Steric")
-                cmfa->addKernel(steric.get());
-            else if(model == "Hydrophobic")
-                cmfa->addKernel(hydrophobic.get());
-            else if(model == "Linear")
-                cmfa->addKernel(linear.get());
-        }
-
-        fp >> model;
-        fp >> nk;
-
-        for(int i =0; i< nk; i++)
-            fp >> usep[i];
-
-        machine->init();
-        machine->setParameters(usep);
-
-        std::ifstream sdf(sdf_test);
-        if(!sdf)
-        {
-            fprintf(stderr,"Please, select a file with structures to do the prognosis.\n");
-            return 0;
-        }
-
-        std::string modelfile = std::string(save_model) + ".svm";
-
-        if(!machine->load(modelfile.c_str()))
-        {
-            return EX_USAGE;
-        }
-
-        fp >> model;
-        fp >> model;
-
-        cmfa->printSelKernels();
-
-        model = std::string(save_model) + ".sdf";
-
-        boost::shared_ptr<SEAL> mdl(new SEAL(model.c_str()));
-        mdl->go();
-
-        machine->setData(mdl.get(), mdl.get());
-
-        //prediction
-        OBMol mol;
-        obconversion.SetInFormat("SDF");
-        obconversion.SetInStream(&sdf);
-
-        while(obconversion.Read(&mol))
-        {
-            mol.DeleteHydrogens();
-            machine->predict(&mol);
-
-        }
-
-        sdf.close();
-        fp.close();
-        return 0;
-    }
-
     //building a model
 
     if(cmfa->count() == 0)
@@ -432,11 +342,11 @@ int main(int argc, char ** argv)
     machine->init();
 
     machine->setParameters(usep);
-    cmfa->setNormalise(false);
+    cmfa->setNormalise(do_norm);
 
     machine->create_random();
 
-    machine->save(save_model);
+    //machine->save(save_model);
 
     if(fres != NULL) fclose(fres);
 

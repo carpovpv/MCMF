@@ -46,11 +46,12 @@ public:
     virtual bool load(const char * filename) {}
     virtual bool save(const char * filename) = 0;
 
-    virtual bool build(const double * params,
+    virtual bool build(const double *,
                        const std::vector< int > & flags,
                        const std::vector<int > & mask) = 0;
 
     virtual bool predict(OBMol *) = 0;
+    virtual void clearCache() {}
 
     void setParameters(double *);
     void setOutput(FILE *);

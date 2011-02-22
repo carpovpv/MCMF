@@ -64,9 +64,6 @@ void OneClassSVM::setCMFA(CMFA *cmfa)
 {
     m_cmfa = cmfa;
     m_cmfa->printSelKernels();
-
-
-
 }
 
 OneClassSVM::~OneClassSVM()
@@ -77,6 +74,11 @@ OneClassSVM::~OneClassSVM()
         free(mp);
         free(Parameters);
     }
+}
+
+void OneClassSVM::clearCache()
+{
+    m_cmfa->clearCache();
 }
 
 bool OneClassSVM::setData(SEAL *train_mols, SEAL *test_mols)
@@ -151,18 +153,18 @@ bool OneClassSVM::build(const double * params, const std::vector<int> &flags, co
 
         problem.y[i_r] = 1.0;
 
-        problem.x[i_r][i_r+1].value = 1.0;
-        problem.x[i_r][i_r+1].index = i_r+1;
-
-        problem.x[i_r][0].value = i_r+1;
+        //first element
+        problem.x[i_r][0].value = i_r+1.0;
         problem.x[i_r][0].index = 0;
 
+        //last element
         problem.x[i_r][rn+1].value = 0.0;
         problem.x[i_r][rn+1].index = -1;
 
         int j_r = i_r;
-        for(int j=i+1; j< N; ++j)
+        for(int j=i; j< N; ++j) //j=i+1;
         {
+
             if(flags[j] == 0) continue;
 
             OBMol *mol1 = train->getMolecule(mask[i]);
@@ -170,12 +172,13 @@ bool OneClassSVM::build(const double * params, const std::vector<int> &flags, co
 
             double K = m_cmfa->calculate(mol1, mol2);
 
-            j_r++;
-            problem.x[i_r][j_r+1].value = problem.x[j_r][i_r+1].value = K;
+            problem.x[i_r][j_r+1].value = K;
+            problem.x[j_r][i_r+1].value = K;
 
-            problem.x[i_r][j_r+1].index = j_r+1;
             problem.x[j_r][i_r+1].index = i_r+1;
+            problem.x[i_r][j_r+1].index = j_r+1;
 
+            j_r++;
         }
     }
 

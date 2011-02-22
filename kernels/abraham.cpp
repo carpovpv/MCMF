@@ -1,6 +1,6 @@
 
 /*
- * hydropho.cpp
+ * abraham.cpp
  * Copyright (C) Carpov Pavel   2010 <carpovpv@qsar.chem.msu.ru>
                  Baskin Igor I. 2010 <igbaskin@gmail.com>
  *
@@ -18,32 +18,37 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "hydropho.h"
+#include "abraham.h"
 #include "../fields.h"
 
-HydrophobicKernel::HydrophobicKernel() : CKernel()
+AbrahamKernel::AbrahamKernel() : CKernel()
 {
-    name =  "Hydrophobic";
+    name = "Steric";
+
 }
 
-double HydrophobicKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma, bool norm)
+double AbrahamKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma, bool norm)
 {
-
     double  s = 0.0;
     double w1 = 0.0;
     double w2 = 0.0;
 
     FOR_ATOMS_OF_MOL(a, mol1)
     {
+
         Fields * f = dynamic_cast<Fields *>( a->GetData(OBGenericDataType::CustomData0));
-        w1 = f->getValue(Fields::Hydrophobic);
+        w1 = f->getValue(Fields::AbrahamA);
 
         FOR_ATOMS_OF_MOL(b, mol2)
         {
-              f = dynamic_cast<Fields *> (b->GetData(OBGenericDataType::CustomData0));
-              w2 = f->getValue(Fields::Hydrophobic);
+            f = dynamic_cast<Fields *>( b->GetData(OBGenericDataType::CustomData0));
+            w2 = f->getValue(Fields::AbrahamA);
 
-              s += w1 * w2 * exp ( -gamma / 4.0 * ( pow((a->x() - b->x()), 2) + pow((a->y() - b->y()), 2)  + pow((a->z() - b->z()), 2)  ));
+            double x = a->x() - b->x();
+            double y = a->y() - b->y();
+            double z = a->z() - b->z();
+
+            s += w1 * w2 * exp ( -gamma/4.0 * ( x*x + y*y +z*z  ) );
         }
     }
     if(norm)
@@ -61,7 +66,6 @@ double HydrophobicKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma, bo
 
        s = s/ sqrt(norms[mol1] * norms[mol2]);
     }
-    return s * COEFF;
-
+    return COEFF * s;
 }
 

@@ -18,12 +18,15 @@ set (HEADERS
 	kernels/steric.h
 	kernels/tanimoto.h
         kernels/linear.h
+        kernels/sterick.h
+        kernels/hydrophov.h
+        kernels/abraham.h
 	seal/ks_seal.h
 	seal/seal.h
-        descrs/fp2.h
         descrs/fp2s.h
         machines/oneclasssvm.h
         machines/svr.h
+        fields.h
 )
 
 set (SOURCE
@@ -38,12 +41,15 @@ set (SOURCE
 	kernels/steric.cpp
 	kernels/tanimoto.cpp
         kernels/linear.cpp
+        kernels/sterick.cpp
+        kernels/hydrophov.cpp
+        kernels/abraham.cpp
 	seal/ks_seal.cpp
 	seal/seal.cpp
-	descrs/fp2.cpp
         descrs/fp2s.cpp
         machines/oneclasssvm.cpp
         machines/svr.cpp
+        fields.cpp
         )
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)

@@ -19,150 +19,36 @@
  */
 
 #include "steric.h"
+#include "../fields.h"
 
 StericKernel::StericKernel() : CKernel()
 {
     name = "Steric";
 
-    /*
-    @ARTICLE{VJGDASMR,
-      author = {Vinter, J.G. and Davis, A. and Saunders, M.R.},
-      title = {Strategic approaches to drug design, I. An integrated software framework
-            for molecular modelling},
-      journal = {J. Comp.-Aided Molecular Design},
-      year = {1987},
-      volume = {1},
-      pages = {31-51},
-      owner = {carpovpv},
-      timestamp = {2010.11.02}
-    }
-    */
-
-    std::map < int, double > temp;
-
-    temp[Atom_H] = 0.042;
-    temp[Atom_C] = 0.067;
-    temp[Atom_N] = 0.063;
-    temp[Atom_O] = 0.069;
-    temp[Atom_F] = 0.068;
-    temp[Atom_S] = 0.115;
-    temp[Atom_CL]= 0.115;
-    temp[Atom_BR]= 0.136;
-    temp[Atom_I] = 0.162;
-
-    table[Atom_H] = temp;
-
-    temp.clear();
-    temp[Atom_C] = 0.107;
-    temp[Atom_N] = 0.100;
-    temp[Atom_O] = 0.111;
-    temp[Atom_F] = 0.108;
-    temp[Atom_S] = 0.183;
-    temp[Atom_CL]= 0.183;
-    temp[Atom_BR]= 0.215;
-    temp[Atom_I] = 0.258;
-
-    table[Atom_C] = temp;
-
-    temp.clear();
-    temp[Atom_N] = 0.095;
-    temp[Atom_O] = 0.105;
-    temp[Atom_F] = 0.102;
-    temp[Atom_S] = 0.172;
-    temp[Atom_CL]= 0.172;
-    temp[Atom_BR]= 0.203;
-    temp[Atom_I] = 0.243;
-
-    table[Atom_N] = temp;
-
-    temp.clear();
-    temp[Atom_O] = 0.116;
-    temp[Atom_F] = 0.112;
-    temp[Atom_S] = 0.190;
-    temp[Atom_CL]= 0.190;
-    temp[Atom_BR]= 0.224;
-    temp[Atom_I] = 0.268;
-
-    table[Atom_O] = temp;
-
-    temp.clear();
-    temp[Atom_F] = 0.109;
-    temp[Atom_S] = 0.185;
-    temp[Atom_CL]= 0.185;
-    temp[Atom_BR]= 0.217;
-    temp[Atom_I] = 0.259;
-
-    table[Atom_F] = temp;
-
-    temp.clear();
-    temp[Atom_S] = 0.314;
-    temp[Atom_CL]= 0.314;
-    temp[Atom_BR]= 0.369;
-    temp[Atom_I] = 0.442;
-
-    table[Atom_S] = temp;
-
-    temp.clear();
-    temp[Atom_CL]= 0.314;
-    temp[Atom_BR]= 0.369;
-    temp[Atom_I] = 0.442;
-
-    table[Atom_CL] = temp;
-
-    temp.clear();
-    temp[Atom_BR]= 0.434;
-    temp[Atom_I] = 0.522;
-
-    table[Atom_BR] = temp;
-
-    temp.clear();
-    temp[Atom_I] = 0.623;
-
-    table[Atom_I] = temp;
-
-}
-
-double StericKernel::steric(int atom1, int atom2)
-{
-    int i1, i2;
-
-    if( atom2 > atom1 )
-        i1 = atom1, i2 = atom2;
-    else
-        i1 = atom2, i2 = atom1;
-
-    if(table.find(i1) != table.end())
-    {
-        if(table[i1].find(i2) != table[i1].end())
-            return table[i1][i2];
-        else
-            return 0.0;
-
-    }
-    return 0.0;
-}
-
-StericKernel::~StericKernel()
-{
 }
 
 double StericKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma, bool norm)
 {
-    double s = 0.0;
+    double  s = 0.0;
+    double w1 = 0.0;
+    double w2 = 0.0;
 
     FOR_ATOMS_OF_MOL(a, mol1)
     {
+
+        Fields * f = dynamic_cast<Fields *>( a->GetData(OBGenericDataType::CustomData0));
+        w1 = f->getValue(Fields::StericE);
+
         FOR_ATOMS_OF_MOL(b, mol2)
         {
-            int i1 = a->GetAtomicNum();
-            int i2 = b->GetAtomicNum();
-            double w = steric(i1, i2);
+            f = dynamic_cast<Fields *>( b->GetData(OBGenericDataType::CustomData0));
+            w2 = f->getValue(Fields::StericE);
 
             double x = a->x() - b->x();
             double y = a->y() - b->y();
             double z = a->z() - b->z();
 
-            s += w * exp ( -gamma/4.0 * ( x*x + y*y +z*z  ) );
+            s += w1 * w2 * exp ( -gamma/4.0 * ( x*x + y*y +z*z  ) );
         }
     }
     if(norm)

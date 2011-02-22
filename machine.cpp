@@ -24,6 +24,7 @@
 #include <math.h>
 #include <algorithm>
 #include <nlopt.h>
+#include <time.h>
 
 Machine::Machine(const std::string & name) : m_name(name)
 {
@@ -44,6 +45,9 @@ std::string & Machine::getName()
 
 void Machine::setParameters(double * h)
 {
+    for(int i=0; i< m_NumParameters; ++i)
+        Parameters[i] = lp[i] + (mp[i] - lp[i] - 0.1) / (1.00 * RAND_MAX) * rand();
+
     for(int i =0; i< m_NumParameters; ++i)
         if(h[i] != UNKNOWN_VALUE)
             Parameters[i] = h[i];
@@ -59,6 +63,7 @@ bool Machine::setData(SEAL *train_mols, SEAL *test_mols)
 double Machine::optim(unsigned, const double *m_params, double *, void *ptr)
 {
 
+    //printf("Start optim\n");
 
     Machine * machine = static_cast<Machine *> (ptr);
 
@@ -80,6 +85,7 @@ double Machine::optim(unsigned, const double *m_params, double *, void *ptr)
         machine->drop_result(machine->results[i]);
 
     machine->results.clear();
+    machine->clearCache();
 
     std::vector < int > mask(N);
     std::vector < int > flags(N);
@@ -106,11 +112,12 @@ double Machine::optim(unsigned, const double *m_params, double *, void *ptr)
             if(flags[i] == 1) rn++;
             //printf("%d ", flags[i]);
         }
-        //printf("\n");
 
-        machine->build(m_params, flags, mask);     
+       // printf("Build %d %d\n", i_cv, N);
+        machine->build(m_params, flags, mask);
     }
 
+    //printf("Numbers: %d\n", machine->results.size());
     double s = machine->statistic();
 
     for(int i =0; i < machine->results.size(); ++i)
@@ -118,6 +125,7 @@ double Machine::optim(unsigned, const double *m_params, double *, void *ptr)
 
     machine->results.clear();
 
+    //printf("End optim\n");
     return s;
 
 }
@@ -176,9 +184,9 @@ double Machine::create(nlopt_algorithm algo)
     nlopt_opt opt = nlopt_create(algo, m_NumParameters);
     nlopt_set_max_objective(opt, optim, this);
 
-    nlopt_set_xtol_rel(opt, 1e-4);
+    nlopt_set_xtol_rel(opt, 1e-5);
     nlopt_set_stopval(opt, 0.99);
-    nlopt_set_ftol_rel(opt, 1e-4);
+    nlopt_set_ftol_rel(opt, 1e-5);
 
     nlopt_set_lower_bounds( opt, lp);
     nlopt_set_upper_bounds( opt, mp);
@@ -220,13 +228,12 @@ double Machine::create(nlopt_algorithm algo)
 double Machine::create_random()
 {
 
-      const int max_iter = 100;
+      srand(time(NULL));
+
+      const int max_iter =3;
 
       double *best_params = (double *) calloc(m_NumParameters,sizeof(double));
-      double best_rmse = RAND_MAX;
-
-      for(int i=0; i< m_NumParameters; ++i)
-          Parameters[i] = lp[i] + (mp[i] - lp[i]) / (1.00 * RAND_MAX) * rand();
+      double best_rmse = -RAND_MAX;
 
       for(int i=0; i< m_NumParameters; ++i)
           best_params[i] = Parameters[i];
@@ -237,11 +244,10 @@ double Machine::create_random()
 
       while(iter++<max_iter)
       {
-           //double temp = create();
-           double temp = optim(0, Parameters,NULL, this);
-           temp *= -1.0;
+           double temp = create();
+           //double temp = optim(0, Parameters,NULL, this);
 
-           if(temp < best_rmse)
+           if(temp > best_rmse)
            {
                for(int i=0; i< m_NumParameters; ++i)
                    best_params[i] = Parameters[i];
@@ -249,23 +255,27 @@ double Machine::create_random()
            }
 
            for(int i=0; i< m_NumParameters; ++i)
-               Parameters[i] = lp[i] + (mp[i] - lp[i]) / (1.00 * RAND_MAX) * rand();
+               Parameters[i] = lp[i] + (mp[i] - lp[i] - 0.1) / (1.00 * RAND_MAX) * rand();
 
       }
 
       for(int i =0; i< m_NumParameters; ++i)
           Parameters[i] = best_params[i];
 
-      create(NLOPT_LN_NELDERMEAD);
+      double temp = create(NLOPT_LN_NELDERMEAD);
 
-      for(int i=0; i< m_NumParameters; ++i)
-          best_params[i] = Parameters[i];
+      if(temp > best_rmse)
+      {
+        best_rmse = temp;
+        for(int i=0; i< m_NumParameters; ++i)
+            best_params[i] = Parameters[i];
+      }
 
       printf("Final:\n");
       printf("found maximum at f(" );
       for(int i =0; i< m_NumParameters; ++i)
           printf(" %g ", best_params[i]);
-      printf (") = %0.10g\n", best_rmse);
+      printf (") = %g\n", best_rmse);
 
       free(best_params);
 

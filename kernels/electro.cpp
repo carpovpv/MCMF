@@ -47,6 +47,7 @@ double ElectroStaticKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma, 
        }
 
        s = s/ sqrt(norms[mol1] * norms[mol2]);
+
     }
     //printf("Kernel : %d %d %g\n", mol1, mol2, s);
 

@@ -43,8 +43,8 @@ public:
     CKernel( DescriptorFactory * descrfactory = NULL) :
         m_descrfactory(descrfactory)
     {
-
-    }
+        norms.clear();
+    }    
 
     virtual ~CKernel()
     {

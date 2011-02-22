@@ -43,6 +43,7 @@ public:
     bool setData(SEAL *train_mols, SEAL *test_mols);
     void setThreshold(double ot);
 
+    void clearCache();
     void init();
 
     double statistic();

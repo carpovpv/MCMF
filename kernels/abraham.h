@@ -1,14 +1,14 @@
 
-#ifndef __STERICK_H
-#define __STERICK_H
+#ifndef __ABRAHAM_H
+#define __ABRAHAM_H
 
 #include "../kernel.h"
 #include <map>
 
-class StericKernel: public CKernel
+class AbrahamKernel: public CKernel
 {
 public:
-    StericKernel();  
+    AbrahamKernel();
     virtual double calculate(OBMol *, OBMol *, double , bool norm = false);
 };
 

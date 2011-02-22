@@ -90,12 +90,12 @@ void Svr::setCMFA(CMFA *cmfa)
     lp[0] = 0.001;
     lp[1] = 1e-3;
     for(int i =2; i< m_NumParameters; ++i)
-        lp[i] = (i%2) ? 0 : 0.00001;
+        lp[i] = (i%2) ? 0 : 0.0001;
 
     mp[0] = 0.999;
-    mp[1] = 5.000;
+    mp[1] = 10.000;
     for(int i =2; i< m_NumParameters; ++i)
-        mp[i] = (i%2) ? 1.0 : 10 ;
+        mp[i] = (i%2) ? 1.0 : 10.0 ;
 
     Parameters[0] = 0.4;
     Parameters[1] = 0.2;
@@ -182,7 +182,7 @@ bool Svr::setData(SEAL *train_mols, SEAL *test_mols)
     printf("\n");
 
     //enlarge interval
-    const double L = 6;
+    const double L = 10;
 
     /*
 
@@ -199,8 +199,8 @@ bool Svr::setData(SEAL *train_mols, SEAL *test_mols)
 
     for(int i =0; i< NP; ++i)
     {
-        l1[i] = min_p[i];// - (max_p[i] - min_p[i]) / L;
-        l2[i] = max_p[i];// + (max_p[i] - min_p[i]) / L;
+        l1[i] = min_p[i] - (max_p[i] - min_p[i]) / L;
+        l2[i] = max_p[i] + (max_p[i] - min_p[i]) / L;
     }
 
     //scale to [0.1; 0.9]
@@ -231,6 +231,11 @@ bool Svr::setData(SEAL *train_mols, SEAL *test_mols)
     printf("SD = %g\nA= %g\n", SD,A);
 
     return true;
+}
+
+void Svr::clearCache()
+{
+    m_cmfa->clearCache();
 }
 
 bool Svr::build(const double * params, const std::vector<int> &flags, const std::vector<int> &mask)
@@ -327,9 +332,8 @@ bool Svr::build(const double * params, const std::vector<int> &flags, const std:
 
         }                
 
-
-
         struct result * res = create_result();
+
         res->y_pred[0] = svm_predict(model, testing);
         res->y_real[0] = m_data[mask[i]][0];
         res->y_pred[0] = l2[0] + (l2[0] - l1[0]) * (res->y_pred[0] - 0.9) / 0.8;
@@ -355,6 +359,7 @@ bool Svr::build(const double * params, const std::vector<int> &flags, const std:
     svm_free_and_destroy_model(&model);
     svm_destroy_param(&param);
 
+
 }
 
 bool Svr::save(const char * filename)
@@ -364,6 +369,7 @@ bool Svr::save(const char * filename)
 
 double Svr::statistic()
 {
+
     //calc q2 and RMSE
     double PRESS = 0.0;
 

@@ -39,9 +39,26 @@ void CMFA::setNormalise(bool norm)
 double CMFA::calculate(OBMol *mol1, OBMol * mol2)
 {
 
+    struct molkey mol;
+    if( reinterpret_cast<int *> (mol1) < reinterpret_cast<int *> (mol2) )
+    {
+        mol.first = mol1;
+        mol.second = mol2;
+    }
+    else
+    {
+        mol.first = mol2;
+        mol.second = mol1;
+    }
+
+    if(gramm.find(mol) != gramm.end())
+        return gramm[mol];
+
     double s = 0.0;
     double hh = 0.0;
+
     int i=0;
+
     for( ; i< m_kernels.size() -1; ++i)
     {
         CKernel * kernel = m_kernels[i];
@@ -56,8 +73,18 @@ double CMFA::calculate(OBMol *mol1, OBMol * mol2)
 
     s+= (1.0- hh) * p;
 
+    gramm[mol] = s;
+
+    //printf("Kernel: %g %d\n", s, gramm.size());
     return s;
 
+}
+
+void CMFA::clearCache()
+{
+    //printf("Gramm size: %d\n", gramm.size());
+    gramm.clear();
+    clearNorms();
 }
 
 void CMFA::setParameters(const double *h)

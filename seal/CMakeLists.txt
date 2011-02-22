@@ -7,12 +7,14 @@ set (PROJECT
 set (HEADERS 
 	seal.h
 	ks_seal.h
+        ../fields.h
 )
 
 set (SOURCE
 	align.cpp
 	ks_seal.cpp
 	seal.cpp
+        ../fields.cpp
         )
 
 project (${PROJECT})

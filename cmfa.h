@@ -26,6 +26,26 @@
 #include <vector>
 #include "kernel.h"
 
+struct molkey
+{
+    OBMol * first;
+    OBMol * second;
+    bool  operator < ( const molkey & l) const
+    {
+        int * f1 = reinterpret_cast<int *> (this->first);
+        int * f2 = reinterpret_cast<int *> (l.first);
+
+        int * s1 = reinterpret_cast<int *> (this->second);
+        int * s2 = reinterpret_cast<int *> (l.second);
+
+        if( f1 < f2) return true;
+        if( f1 == f2 && s1 < s2) return true;
+
+        return false;
+    }
+};
+
+
 /*!
   Continuous Molecular Field Analysis.
 */
@@ -41,6 +61,7 @@ public:
     void addKernel(CKernel *);
     void delKernel(CKernel *);
     void clear();
+    void clearCache();
 
     void setParameters(const double * h);
     int count() {
@@ -60,6 +81,9 @@ private:
 
     const double * m_h;
     bool m_norm;
+
+
+    std::map < struct molkey, double > gramm;
 
     CMFA (const CMFA &);
     CMFA & operator=(const CMFA &);
