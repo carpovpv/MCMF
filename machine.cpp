@@ -225,12 +225,10 @@ double Machine::create(nlopt_algorithm algo)
 
 }
 
-double Machine::create_random()
+double Machine::create_random(int max_iter)
 {
 
       srand(time(NULL));
-
-      const int max_iter =3;
 
       double *best_params = (double *) calloc(m_NumParameters,sizeof(double));
       double best_rmse = -RAND_MAX;

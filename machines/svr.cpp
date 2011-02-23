@@ -22,8 +22,6 @@
 #include <iostream>
 #include <map>
 
-#define GNUPLOT "gnuplot -persist"
-
 Svr::Svr() : Machine("SVR")
 {
     std::cout << "SVR is loaded." << std::endl;

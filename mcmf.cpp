@@ -66,6 +66,7 @@ int main(int argc, char ** argv)
     int do_help = 0;
     int do_prognosis = 0;
     int do_norm = 1;
+    int max_iter = 3;
 
     char * save_model = NULL;
     char * file_res = NULL;
@@ -84,6 +85,7 @@ int main(int argc, char ** argv)
         {"property", optional_argument, NULL, 'p'},
         {"prognosis", optional_argument, & do_prognosis, 1},
         {"norm", optional_argument, & do_norm, 1},
+        {"max-iter", optional_argument, NULL, 'i'},
         {0, 0, 0, 0}
     };
 
@@ -124,6 +126,9 @@ int main(int argc, char ** argv)
 
         switch(c)
         {
+        case 'i':
+            max_iter=atoi(optarg);
+            break;
         case 'p':
             p = optarg;
             do
@@ -344,7 +349,7 @@ int main(int argc, char ** argv)
     machine->setParameters(usep);
     cmfa->setNormalise(do_norm);
 
-    machine->create_random();
+    machine->create_random(max_iter);
 
     //machine->save(save_model);
 

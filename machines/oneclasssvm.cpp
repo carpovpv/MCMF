@@ -58,6 +58,10 @@ OneClassSVM::OneClassSVM() : Machine("1-SVM")
     lp = NULL;
     mp = NULL;
 
+    gp = popen(GNUPLOT,"w"); /* 'gp' is the pipe descriptor */
+    if(gp == NULL)
+        fprintf(stderr, "Error init gnuplot\n");
+
 }
 
 void OneClassSVM::setCMFA(CMFA *cmfa)
@@ -454,6 +458,16 @@ double OneClassSVM::statistic()
     AUC = AUC * 0.5;
     printf("AUC: %g\n", AUC);
 
+    FILE * temp = fopen("temp","w");
+    for(int i =0; i< auc.size(); i++)
+        fprintf(temp, "%g %g\n", auc[i].fpr, auc[i].tpr );
+
+    fclose(temp);
+
+    fprintf(gp, "plot 'temp' with lines, x\n");
+
+    fflush(gp);
+
     if(mode)
     {
         for(int i =0; i< auc.size(); i++)
@@ -520,7 +534,7 @@ double OneClassSVM::statistic()
         double fpr = fp / (tn + fp);
         double tpr = tp / (tp + fn);
 
-        fprintf(fres, "\n%.2f %.4f ", AUC, ot);
+        fprintf(fres, "\n%.2f ", AUC);
         fprintf(fres, " %.4f %.0f %.0f %.0f %.0f %.2f %.2f ", ot, tn, tp, fn, fp, 100 * tn/(tn+fp),100 * tp/(tp+fn));
 
         for(int i =0; i< m_NumParameters; ++i)

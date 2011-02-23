@@ -26,6 +26,7 @@
 #include <nlopt.h>
 
 #define UNKNOWN_VALUE 666
+#define GNUPLOT "gnuplot -persist"
 
 struct result
 {
@@ -59,7 +60,7 @@ public:
     static double optim(unsigned, const double *m_params, double *, void * ptr);
 
     double create(nlopt_algorithm algo = NLOPT_LN_BOBYQA);
-    double create_random();
+    double create_random(int maxiter = 3);
 
     virtual void init() {}
 
