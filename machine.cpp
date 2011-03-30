@@ -74,11 +74,11 @@ double Machine::optim(unsigned, const double *m_params, double *, void *ptr)
     }
     const int N = machine->train->getNumberOfMolecules();
 
-    const double CV = N;
+    const double CV = 10;
 
     printf("Try: ");
     for(int i =0; i< machine->m_NumParameters; ++i)
-        printf(" %g ", m_params[i]);
+        printf(" %.8f ", m_params[i]);
     printf("\n");
 
     for(int i =0; i < machine->results.size(); ++i)
@@ -113,7 +113,7 @@ double Machine::optim(unsigned, const double *m_params, double *, void *ptr)
             //printf("%d ", flags[i]);
         }
 
-       // printf("Build %d %d\n", i_cv, N);
+        //printf("Build %d %d\n", i_cv, N);
         machine->build(m_params, flags, mask);
     }
 
@@ -238,12 +238,10 @@ double Machine::create_random(int max_iter)
 
       int iter = 0;
 
-      srand(time(NULL));
-
       while(iter++<max_iter)
       {
-           double temp = create();
-           //double temp = optim(0, Parameters,NULL, this);
+           //double temp = create();
+           double temp = optim(0, Parameters,NULL, this);
 
            if(temp > best_rmse)
            {
@@ -276,6 +274,7 @@ double Machine::create_random(int max_iter)
       printf (") = %g\n", best_rmse);
 
       free(best_params);
+
 
 }
 

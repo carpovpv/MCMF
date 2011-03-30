@@ -82,7 +82,7 @@ double CMFA::calculate(OBMol *mol1, OBMol * mol2)
 
 void CMFA::clearCache()
 {
-    //printf("Gramm size: %d\n", gramm.size());
+    printf("Gramm size: %d\n", gramm.size());
     gramm.clear();
     clearNorms();
 }

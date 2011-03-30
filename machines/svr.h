@@ -43,7 +43,6 @@ public:
     void setCMFA( CMFA * cmfa);
     bool setData(SEAL *train_mols, SEAL *test_mols);
     void setProps(std::vector< std::string > * props);
-    void setKernelParameters(const double *);
 
     void clearCache();
     double statistic();

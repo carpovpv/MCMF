@@ -349,6 +349,7 @@ int main(int argc, char ** argv)
     machine->setParameters(usep);
     cmfa->setNormalise(do_norm);
 
+    //machine->create();
     machine->create_random(max_iter);
 
     //machine->save(save_model);

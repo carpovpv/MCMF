@@ -116,7 +116,7 @@ void OneClassSVM::init()
 
     lp[0] = 0.001;
     for(int i =1; i< m_NumParameters; ++i)
-        lp[i] = (i%2) ? 0.0001 : 0.001;
+        lp[i] = (i%2) ? 0.0 : 0.0;//0.0001 : 0.001;
 
     mp[0] = 0.800;
     for(int i =1; i< m_NumParameters; ++i)
@@ -385,7 +385,9 @@ double OneClassSVM::statistic()
             min_r = temp;
     }
 
-    printf("max_r : %g\nmin_r : %g\n", max_r, min_r);
+    printf("max_r : %g\nmin_r : %g size: %d\n", max_r, min_r, results.size());
+    if(max_r == -DBL_MAX || min_r == DBL_MAX)
+        return 0;
 
     double step = (max_r - min_r ) / 10000.0;
     std::vector < struct res_auc > auc;
@@ -469,7 +471,8 @@ double OneClassSVM::statistic()
     fflush(gp);
 
     if(mode)
-    {
+    {              
+
         for(int i =0; i< auc.size(); i++)
             fprintf(fres, "%g %g\n", auc[i].fpr, auc[i].tpr );
 
@@ -540,6 +543,7 @@ double OneClassSVM::statistic()
         for(int i =0; i< m_NumParameters; ++i)
             fprintf(fres, " %g ", Parameters[i]);
 
+        fflush(fres);
         m_threshold = ot;
 
     }
@@ -549,7 +553,7 @@ double OneClassSVM::statistic()
 
 void OneClassSVM::predict_decoys()
 {
-    param.nu = Parameters[0];
+    //param.nu = Parameters[0];
     const int N = train->getNumberOfMolecules();
 
     problem.l = N;
