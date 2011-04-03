@@ -142,7 +142,10 @@ bool Svr::setData(SEAL *train_mols, SEAL *test_mols)
         for(int j=0; j< NP; ++j)
         {
             std::string data = train->getMolecule(i)->GetData(m_props->at(j))->GetValue();
-            temp.push_back(atof(data.c_str()));
+            double d = log10(0.1+atof(data.c_str()));
+
+            //double d = atof(data.c_str());
+            temp.push_back(d);
         }
         m_data.push_back(temp);
     }

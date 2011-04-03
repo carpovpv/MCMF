@@ -258,7 +258,7 @@ double Machine::create_random(int max_iter)
       for(int i =0; i< m_NumParameters; ++i)
           Parameters[i] = best_params[i];
 
-      double temp = create(NLOPT_LN_NELDERMEAD);
+      double temp = create();
 
       if(temp > best_rmse)
       {

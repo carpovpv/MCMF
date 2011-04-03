@@ -25,10 +25,14 @@
 #include <fstream>
 #include <stdexcept>
 
+#include <boost/algorithm/string.hpp>
+
 #include "seal.h"
 #include "../fields.h"
 
 using namespace OpenBabel;
+using namespace boost;
+
 
 SEAL::SEAL(const char * sdf,  const std::vector<std::string> * props)
 {
@@ -69,7 +73,17 @@ void SEAL::readStructures(std::ifstream *ifs, const std::vector<std::string> *pr
             for(int j=0; j< props->size(); ++j)
             {
                 if(!mol.HasData(props->at(j)))
-                    add = false;
+                        add = false;
+                else
+                {
+                    if(mol.HasData(props->at(j)))
+                    {
+                        std::string data = mol.GetData(props->at(j))->GetValue();
+                        trim(data);
+                        if(data.empty())
+                            add = false;
+                    }
+                }
             }
         }
 
