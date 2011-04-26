@@ -21,13 +21,13 @@
 #include "abraham.h"
 #include "../fields.h"
 
-AbrahamKernel::AbrahamKernel() : CKernel()
+AbrahamKernelA::AbrahamKernelA() : CKernel()
 {
-    name = "Steric";
+    name = "AbrahamA";
 
 }
 
-double AbrahamKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma, bool norm)
+double AbrahamKernelA::calculate(OBMol * mol1, OBMol * mol2, double gamma, bool norm)
 {
     double  s = 0.0;
     double w1 = 0.0;
@@ -68,4 +68,149 @@ double AbrahamKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma, bool n
     }
     return COEFF * s;
 }
+
+AbrahamKernelB::AbrahamKernelB() : CKernel()
+{
+    name = "AbrahamB";
+
+}
+
+double AbrahamKernelB::calculate(OBMol * mol1, OBMol * mol2, double gamma, bool norm)
+{
+    double  s = 0.0;
+    double w1 = 0.0;
+    double w2 = 0.0;
+
+    FOR_ATOMS_OF_MOL(a, mol1)
+    {
+
+        Fields * f = dynamic_cast<Fields *>( a->GetData(OBGenericDataType::CustomData0));
+        w1 = f->getValue(Fields::AbrahamB);
+
+        FOR_ATOMS_OF_MOL(b, mol2)
+        {
+            f = dynamic_cast<Fields *>( b->GetData(OBGenericDataType::CustomData0));
+            w2 = f->getValue(Fields::AbrahamB);
+
+            double x = a->x() - b->x();
+            double y = a->y() - b->y();
+            double z = a->z() - b->z();
+
+            s += w1 * w2 * exp ( -gamma/4.0 * ( x*x + y*y +z*z  ) );
+        }
+    }
+    if(norm)
+    {
+
+       if(norms.find(mol1) == norms.end())
+       {
+           norms[mol1] = calculate(mol1, mol1, gamma, false);
+       }
+
+       if(norms.find(mol2) == norms.end())
+       {
+           norms[mol2] = calculate(mol2, mol2, gamma, false);
+       }
+
+       s = s/ sqrt(norms[mol1] * norms[mol2]);
+    }
+    return COEFF * s;
+}
+
+AbrahamKernelE::AbrahamKernelE() : CKernel()
+{
+    name = "AbrahamE";
+
+}
+
+double AbrahamKernelE::calculate(OBMol * mol1, OBMol * mol2, double gamma, bool norm)
+{
+    double  s = 0.0;
+    double w1 = 0.0;
+    double w2 = 0.0;
+
+    FOR_ATOMS_OF_MOL(a, mol1)
+    {
+
+        Fields * f = dynamic_cast<Fields *>( a->GetData(OBGenericDataType::CustomData0));
+        w1 = f->getValue(Fields::AbrahamE);
+
+        FOR_ATOMS_OF_MOL(b, mol2)
+        {
+            f = dynamic_cast<Fields *>( b->GetData(OBGenericDataType::CustomData0));
+            w2 = f->getValue(Fields::AbrahamE);
+
+            double x = a->x() - b->x();
+            double y = a->y() - b->y();
+            double z = a->z() - b->z();
+
+            s += w1 * w2 * exp ( -gamma/4.0 * ( x*x + y*y +z*z  ) );
+        }
+    }
+    if(norm)
+    {
+
+       if(norms.find(mol1) == norms.end())
+       {
+           norms[mol1] = calculate(mol1, mol1, gamma, false);
+       }
+
+       if(norms.find(mol2) == norms.end())
+       {
+           norms[mol2] = calculate(mol2, mol2, gamma, false);
+       }
+
+       s = s/ sqrt(norms[mol1] * norms[mol2]);
+    }
+    return COEFF * s;
+}
+
+AbrahamKernelS::AbrahamKernelS() : CKernel()
+{
+    name = "AbrahamS";
+
+}
+
+double AbrahamKernelS::calculate(OBMol * mol1, OBMol * mol2, double gamma, bool norm)
+{
+    double  s = 0.0;
+    double w1 = 0.0;
+    double w2 = 0.0;
+
+    FOR_ATOMS_OF_MOL(a, mol1)
+    {
+
+        Fields * f = dynamic_cast<Fields *>( a->GetData(OBGenericDataType::CustomData0));
+        w1 = f->getValue(Fields::AbrahamS);
+
+        FOR_ATOMS_OF_MOL(b, mol2)
+        {
+            f = dynamic_cast<Fields *>( b->GetData(OBGenericDataType::CustomData0));
+            w2 = f->getValue(Fields::AbrahamS);
+
+            double x = a->x() - b->x();
+            double y = a->y() - b->y();
+            double z = a->z() - b->z();
+
+            s += w1 * w2 * exp ( -gamma/4.0 * ( x*x + y*y +z*z  ) );
+        }
+    }
+    if(norm)
+    {
+
+       if(norms.find(mol1) == norms.end())
+       {
+           norms[mol1] = calculate(mol1, mol1, gamma, false);
+       }
+
+       if(norms.find(mol2) == norms.end())
+       {
+           norms[mol2] = calculate(mol2, mol2, gamma, false);
+       }
+
+       s = s/ sqrt(norms[mol1] * norms[mol2]);
+    }
+    return COEFF * s;
+}
+
 

@@ -61,6 +61,17 @@ include_directories(${OPENBABEL2_INCLUDE_DIR})
 include_directories(${Boost_INCLUDE_DIRS})
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/seal)
+add_subdirectory(${PROJECT_SOURCE_DIR}/nnet)
+add_subdirectory(${PROJECT_SOURCE_DIR}/nnet/prognosis)
+add_subdirectory(${PROJECT_SOURCE_DIR}/nnet/occprog)
+add_subdirectory(${PROJECT_SOURCE_DIR}/utils/auc)
+add_subdirectory(${PROJECT_SOURCE_DIR}/utils/dsc2set)
+add_subdirectory(${PROJECT_SOURCE_DIR}/utils/ot)
+add_subdirectory(${PROJECT_SOURCE_DIR}/utils/spc)
+add_subdirectory(${PROJECT_SOURCE_DIR}/utils/spct)
+add_subdirectory(${PROJECT_SOURCE_DIR}/utils/tnt)
+add_subdirectory(${PROJECT_SOURCE_DIR}/utils/fp2)
+
 
 set(LIBS ${OPENBABEL2_LIBRARIES})
 

@@ -67,6 +67,7 @@ int main(int argc, char ** argv)
     int do_prognosis = 0;
     int do_norm = 1;
     int max_iter = 3;
+    int cv = 10;
 
     char * save_model = NULL;
     char * file_res = NULL;
@@ -86,6 +87,7 @@ int main(int argc, char ** argv)
         {"prognosis", optional_argument, & do_prognosis, 1},
         {"norm", optional_argument, & do_norm, 1},
         {"max-iter", optional_argument, NULL, 'i'},
+        {"cv", optional_argument, NULL, 'c'},
         {0, 0, 0, 0}
     };
 
@@ -105,7 +107,11 @@ int main(int argc, char ** argv)
 
     boost::shared_ptr<HydrophobicKernelV> hydrophobicv (new HydrophobicKernelV());
     boost::shared_ptr<StericKernelK> sterick (new StericKernelK());
-    boost::shared_ptr<AbrahamKernel> abraham (new AbrahamKernel());
+
+    boost::shared_ptr<AbrahamKernelA> abrahama (new AbrahamKernelA());
+    boost::shared_ptr<AbrahamKernelB> abrahamb (new AbrahamKernelB());
+    boost::shared_ptr<AbrahamKernelE> abrahame (new AbrahamKernelE());
+    boost::shared_ptr<AbrahamKernelS> abrahams (new AbrahamKernelS());
 
     boost::shared_ptr<GaussKernel> gauss( new GaussKernel(fp2s.get()));
     boost::shared_ptr<TanimotoKernel > tanimoto (new TanimotoKernel(fp2s.get()));
@@ -128,6 +134,9 @@ int main(int argc, char ** argv)
         {
         case 'i':
             max_iter=atoi(optarg);
+            break;
+        case 'c':
+            cv=atoi(optarg);
             break;
         case 'p':
             p = optarg;
@@ -174,8 +183,14 @@ int main(int argc, char ** argv)
                         cmfa->addKernel(hydrophobicv.get());
                     else if(!strcmp(s, "sterick"))
                         cmfa->addKernel(sterick.get());
-                    else if(!strcmp(s,"abraham"))
-                        cmfa->addKernel(abraham.get());
+                    else if(!strcmp(s,"abrahama"))
+                        cmfa->addKernel(abrahama.get());
+                    else if(!strcmp(s,"abrahamb"))
+                        cmfa->addKernel(abrahamb.get());
+                    else if(!strcmp(s,"abrahame"))
+                        cmfa->addKernel(abrahame.get());
+                    else if(!strcmp(s,"abrahams"))
+                        cmfa->addKernel(abrahams.get());
                     else
                     {
                         fprintf(stderr,"Unknown kernel %s.\n", s);
@@ -344,6 +359,7 @@ int main(int argc, char ** argv)
         return EX_USAGE;
 
     machine->setOutput(fres);
+    machine->set_CV(cv);
     machine->init();
 
     machine->setParameters(usep);

@@ -56,6 +56,8 @@ public:
 
     void setParameters(double *);
     void setOutput(FILE *);
+    void set_CV(int CV);
+    int get_CV();
 
     static double optim(unsigned, const double *m_params, double *, void * ptr);
 
@@ -89,6 +91,7 @@ private:
     Machine (const Machine &);
     Machine & operator=(const Machine &);
 
+    int m_CV;
 
 };
 

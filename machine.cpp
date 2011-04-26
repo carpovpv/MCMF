@@ -31,6 +31,7 @@ Machine::Machine(const std::string & name) : m_name(name)
     test = NULL;
     train = NULL;
     fres = NULL;
+    m_CV = 10;
 }
 
 void Machine::setOutput(FILE * f)
@@ -60,6 +61,16 @@ bool Machine::setData(SEAL *train_mols, SEAL *test_mols)
     return true;
 }
 
+void Machine::set_CV(int CV)
+{
+    m_CV = CV;
+}
+
+int Machine::get_CV()
+{
+    return m_CV;
+}
+
 double Machine::optim(unsigned, const double *m_params, double *, void *ptr)
 {
 
@@ -74,7 +85,7 @@ double Machine::optim(unsigned, const double *m_params, double *, void *ptr)
     }
     const int N = machine->train->getNumberOfMolecules();
 
-    const double CV = 10;
+    double CV = machine->get_CV();
 
     printf("Try: ");
     for(int i =0; i< machine->m_NumParameters; ++i)

@@ -466,9 +466,9 @@ double OneClassSVM::statistic()
 
     fclose(temp);
 
-    fprintf(gp, "plot 'temp' with lines, x\n");
+    //fprintf(gp, "plot 'temp' with lines, x\n");
 
-    fflush(gp);
+    //fflush(gp);
 
     if(mode)
     {              

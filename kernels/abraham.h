@@ -5,12 +5,34 @@
 #include "../kernel.h"
 #include <map>
 
-class AbrahamKernel: public CKernel
+class AbrahamKernelA: public CKernel
 {
 public:
-    AbrahamKernel();
+    AbrahamKernelA();
     virtual double calculate(OBMol *, OBMol *, double , bool norm = false);
 };
+
+class AbrahamKernelB: public CKernel
+{
+public:
+    AbrahamKernelB();
+    virtual double calculate(OBMol *, OBMol *, double , bool norm = false);
+};
+
+class AbrahamKernelE: public CKernel
+{
+public:
+    AbrahamKernelE();
+    virtual double calculate(OBMol *, OBMol *, double , bool norm = false);
+};
+
+class AbrahamKernelS: public CKernel
+{
+public:
+    AbrahamKernelS();
+    virtual double calculate(OBMol *, OBMol *, double , bool norm = false);
+};
+
 
 #endif
 
