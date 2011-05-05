@@ -29,7 +29,7 @@ class ElectroStaticKernel: public CKernel
 public:
     ElectroStaticKernel();
     virtual ~ElectroStaticKernel();
-    virtual double calculate(OBMol *, OBMol *, double, bool norm = false );
+    virtual double calculate(OBMol *, bool, OBMol *, double, bool norm = false );
 
 };
 

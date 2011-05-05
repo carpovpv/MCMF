@@ -28,7 +28,7 @@ class GaussKernel: public CKernel
 public:
     GaussKernel(DescriptorFactory *);
     virtual ~GaussKernel();
-    virtual double calculate(OBMol *, OBMol *, double, bool norm = false);
+    virtual double calculate(OBMol *, bool, OBMol *, double, bool norm = false);
 private:
     bool m_remap;
 };

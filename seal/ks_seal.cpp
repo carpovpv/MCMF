@@ -26,7 +26,17 @@
 #include <nlopt.h>
 #include <vector>
 
+#include <pthread.h>
+
+pthread_mutex_t Mutex = PTHREAD_MUTEX_INITIALIZER;
+
 using namespace std;
+
+void KS_Seal::set2Mol(OBMol & mol)
+{
+    if(mols.size() < 2) mols.resize(2);
+    mols[1] = mol;
+}
 
 double KS_Seal::score_function(unsigned , const double *p, double *, void * parent)
 {
@@ -93,7 +103,7 @@ KS_Seal::KS_Seal(const char * fp,
 
     opt = nlopt_create(NLOPT_LN_BOBYQA, 7);
     nlopt_set_min_objective(opt, score_function, this);
-    nlopt_set_xtol_rel(opt, 1e-4);
+    nlopt_set_xtol_rel(opt, 1e-2);
 
     double min_constraint[] = {  -0.5, -0.5 , -0.5, -0.5, -100, -100, -100};
     double max_constraint[] = {  10, 10 , 10, 10, 100, 100, 100};
@@ -101,6 +111,7 @@ KS_Seal::KS_Seal(const char * fp,
     nlopt_set_lower_bounds( opt,min_constraint);
     nlopt_set_upper_bounds( opt,max_constraint);
 
+    m_mols.resize(1);
 }
 
 double KS_Seal::optim (double *start, double *xmin )
@@ -151,6 +162,8 @@ void KS_Seal::createQ(const double *q, double *Q)
 double KS_Seal::score(unsigned int st1, unsigned int st2)
 {
 
+    printf("Score 1\n");
+
     mainMol = mols[st1];
     const int N1 = mainMol.NumAtoms();
     const int N2 = mols[st2].NumAtoms();
@@ -158,10 +171,10 @@ double KS_Seal::score(unsigned int st1, unsigned int st2)
     double smin = RAND_MAX;
     double sp[7];
 
-    double * coordinates = new double [N2 * 3] ;
+    //double * coordinates = new double [N2 * 3] ;
 
-    for(int i=0; i< N2*3; ++i)
-        coordinates[i] = 0.0;
+    //for(int i=0; i< N2*3; ++i)
+    //    coordinates[i] = 0.0;
 
 //   for(int n_mol = 0; n_mol < (st2 - st1); ++n_mol)
     int n_mol = 0;
@@ -244,26 +257,28 @@ double KS_Seal::score(unsigned int st1, unsigned int st2)
         supMol.Rotate(qv);
         supMol.Translate(t);
 
-        double * n_coordinates =  supMol.GetCoordinates();
-        for(int i=0; i< N2*3; ++i)
-            coordinates[i] += n_coordinates[i];
+        //double * n_coordinates =  supMol.GetCoordinates();
+        //for(int i=0; i< N2*3; ++i)
+        //    coordinates[i] += n_coordinates[i];
 
     }
 
-    for(int i=0; i< N2*3; ++i)
-    {
-        coordinates[i] = 0.8;//(-0.5 )*coordinates[i] / (st2 - st1);
+//    for(int i=0; i< N2*3; ++i)
+//    {
+//        coordinates[i] = 0.8;//(-0.5 )*coordinates[i] / (st2 - st1);
 //	    fprintf(stderr,"coord %g\n", coordinates[i]);
-    }
+//    }
 
 //   fprintf(stderr, "ST@: %d\n", st2 - st1);
 
     //supMol.SetCoordinates(coordinates);
 
     //m_mols.push_back(supMol);
+    pthread_mutex_lock(&Mutex);
     conv->Write(&supMol);
+    pthread_mutex_unlock(&Mutex);
 
-    delete [] coordinates;
+    //delete [] coordinates;
 
 }
 
@@ -274,10 +289,14 @@ KS_Seal::~KS_Seal()
 
 void KS_Seal::align()
 {
-    if(debug)
-        std::cerr << "Starting alignment process...\n";
+    if(first)
+    for(int i=0; i< mols.size(); ++i)
+        mols[i].Center();
 
-    m_mols.push_back(mols[0]);
+    if(debug)
+        std::cerr << "Starting alignment process... " << mols[0].NumAtoms() << std::endl;
+
+    if(first)
     conv->Write(&mols[0]);
 
     for(int first = 1; first < mols.size(); ++first)
@@ -287,5 +306,6 @@ void KS_Seal::align()
         score(0, first);
         std::cerr << "Cycles " <<  m_cycles << std::endl;
     }
+
 }
 

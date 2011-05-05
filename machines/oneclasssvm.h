@@ -25,8 +25,6 @@
 #include "../cmfa.h"
 #include "../svm.h"
 
-
-
 class OneClassSVM : public Machine
 {
 public:
@@ -35,7 +33,7 @@ public:
 
     bool save(const char *filename);
 
-    bool load(const char * filename);
+    bool load(FILE * fp);
     bool predict(OBMol *);
     bool build(const double * params, const std::vector<int> &flags, const std::vector<int> &mask);
 
@@ -71,6 +69,7 @@ private:
     void predict_decoys();
 
     static int res_comp(struct res_auc a1, struct res_auc a2);
+
 
 };
 

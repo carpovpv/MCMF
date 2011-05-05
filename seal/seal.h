@@ -31,7 +31,7 @@ class SEAL
 {
 public:
     SEAL(const char * sdf, const std::vector<std::string> * props = NULL);
-    SEAL(std::ifstream * ifs, const std::vector<std::string> * props = NULL, int mn = -1);
+    SEAL(std::istream * ifs, const std::vector<std::string> * props = NULL, int mn = -1);
 
     virtual ~SEAL();
     void go();
@@ -39,17 +39,20 @@ public:
     int getNumberOfMolecules() const;
     OBMol * getMolecule(int);
 
+    void setFirst(bool);
 private:
     SEAL (const SEAL &);
     SEAL & operator=(const SEAL &);
 
 
     static const int  optim = 1000;
-    void readStructures(std::ifstream * ifs, const std::vector< std::string> * props, int mn);
+    void readStructures(std::istream * ifs, const std::vector< std::string> * props, int mn);
 
     virtual void align();
 
 protected:
+    bool first;
+
     OBConversion * conv;
 
     static const bool debug = true;

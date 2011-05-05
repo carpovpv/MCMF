@@ -9,7 +9,7 @@ class HydrophobicKernel: public CKernel
 {
 public:
     HydrophobicKernel();
-    virtual double calculate(OBMol *, OBMol *, double, bool norm = false );
+    virtual double calculate(OBMol *, bool, OBMol *, double, bool norm = false );
 
 };
 

@@ -56,7 +56,7 @@ public:
     CMFA();
     virtual ~CMFA();
 
-    virtual double calculate(OBMol *, OBMol *);
+    virtual double calculate(OBMol *, bool, OBMol *);
 
     void addKernel(CKernel *);
     void delKernel(CKernel *);

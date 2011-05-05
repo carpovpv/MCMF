@@ -196,7 +196,7 @@ double Machine::create(nlopt_algorithm algo)
     nlopt_set_max_objective(opt, optim, this);
 
     nlopt_set_xtol_rel(opt, 1e-5);
-    nlopt_set_stopval(opt, 0.99);
+    nlopt_set_stopval(opt, 0.96);
     nlopt_set_ftol_rel(opt, 1e-5);
 
     nlopt_set_lower_bounds( opt, lp);

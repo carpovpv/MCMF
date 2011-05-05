@@ -26,6 +26,8 @@ FingerPrints2s::FingerPrints2s() : m_ndescr(1024)
     m_ob  = OBFingerprint::FindFingerprint("FP2");
     if(m_ob == NULL)
         printf("Problem in FP2\n");
+    name = "FP2";
+    descrs.resize(m_ndescr);
 }
 
 FingerPrints2s::~FingerPrints2s()
@@ -38,18 +40,30 @@ bool FingerPrints2s::needMapping() const
     return false;
 }
 
-const std::vector < struct Descriptor > & FingerPrints2s::getDescriptors(OBMol * mol)
+const std::vector < struct Descriptor > & FingerPrints2s::getDescriptors(OBMol * mol, bool regime)
 {
-    std::map < OBMol *, std::vector < struct Descriptor > >::iterator it;
-    it = m_descrs.find(mol);
 
-    if(it != m_descrs.end())
+    if(regime)
     {
-        return m_descrs[mol];
+        std::map < OBMol *, std::vector < struct Descriptor > >::iterator it;
+        it = m_descrs.find(mol);
+
+        if(it != m_descrs.end())
+        {
+            return m_descrs[mol];
+        }
+    }
+    else
+    {
+
+        std::string c = mol->GetData("prognosis")->GetValue();
+        long cur = atol(c.c_str());
+
+        if( prev == cur)
+            return descrs;
+        prev = cur;
     }
     //calc descrs...
-
-    std::vector< struct Descriptor> descrs(m_ndescr);
 
     std::vector< unsigned int> fp;
     m_ob->GetFingerprint(mol,fp, m_ndescr);
@@ -66,8 +80,9 @@ const std::vector < struct Descriptor > & FingerPrints2s::getDescriptors(OBMol *
             descrs[N++].value = (temp & one) ? 1.0 : 0.0;
             temp = temp << 1  ;
         }
-    }
+    }        
+    if(regime)
+        m_descrs[mol] = descrs;
 
-    m_descrs[mol] = descrs;
-    return m_descrs[mol];
+    return descrs;
 }

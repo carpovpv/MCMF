@@ -35,7 +35,8 @@ public:
             double wS = 1.0,
             int probes =1
            );
-    ~KS_Seal();
+    virtual ~KS_Seal();
+    void set2Mol(OBMol & mol);
 
 private:
     int m_cycles;

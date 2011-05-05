@@ -40,12 +40,21 @@ class DescriptorFactory
 public:
     DescriptorFactory();
     virtual ~DescriptorFactory() ;
-    virtual const std::vector < struct Descriptor > & getDescriptors(OBMol *) = 0;
+
+    std::string getName() const ;
+
+    virtual const std::vector < struct Descriptor > & getDescriptors(OBMol *, bool) = 0;
     virtual bool needMapping()  const ;
+
+protected:
+    std::string name;
+    long prev;
+    std::vector< struct Descriptor> descrs;
 
 private:
     DescriptorFactory (const DescriptorFactory &);
     DescriptorFactory & operator=(const DescriptorFactory &);
+
 
 };
 

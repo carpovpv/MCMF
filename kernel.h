@@ -44,6 +44,7 @@ public:
         m_descrfactory(descrfactory)
     {
         norms.clear();
+         prev = -1;
     }    
 
     virtual ~CKernel()
@@ -55,7 +56,7 @@ public:
       Returns the similarity between two molecules within the field.
     */
 
-    virtual double calculate(OBMol *, OBMol *, double, bool norm = false ) = 0;
+    virtual double calculate(OBMol *, bool, OBMol *, double, bool norm = false ) = 0;
 
     /*!
        Return the name of a kernel.
@@ -75,6 +76,10 @@ protected:
     DescriptorFactory * m_descrfactory;
 
     std::map < OBMol *, double> norms;
+
+    //prognosis
+    double curnorm; //for current molecule in the prognosis mode.
+    long prev;
 
 
 };

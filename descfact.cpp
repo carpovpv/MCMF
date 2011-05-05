@@ -22,6 +22,7 @@
 
 DescriptorFactory::DescriptorFactory()
 {
+    prev = -1;
 }
 
 DescriptorFactory::~DescriptorFactory()
@@ -32,3 +33,9 @@ bool  DescriptorFactory::needMapping() const
 {
     return false;
 }
+
+std::string DescriptorFactory::getName() const
+{
+    return name;
+}
+

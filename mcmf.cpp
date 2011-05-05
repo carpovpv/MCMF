@@ -22,9 +22,15 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <sstream>
 
 #include "seal/seal.h"
 #include "seal/ks_seal.h"
+
+#include "fields.h"
 
 #include "cmfa.h"
 #include "kernels/gauss.h"
@@ -32,6 +38,7 @@
 #include "descfact.h"
 #include "kernels/electro.h"
 #include "descrs/fp2s.h"
+#include "descrs/spectrophores.h"
 #include "kernels/hydropho.h"
 #include "kernels/steric.h"
 #include "kernels/linear.h"
@@ -45,6 +52,9 @@
 #include <errno.h>
 #include <boost/shared_ptr.hpp>
 
+#include <QtCore/QCoreApplication>
+#include <QSqlDatabase>
+
 const int EX_USAGE = 127;
 const int MAX_PARAMS = 20;
 
@@ -56,6 +66,18 @@ void help()
 
 int main(int argc, char ** argv)
 {
+
+    QCoreApplication a();
+
+
+    QSqlDatabase db = QSqlDatabase::addDatabase("QIBASE");
+    db.setHostName("localhost");
+    db.setDatabaseName("zinc");
+    db.setUserName("sysdba");
+    db.setPassword("cdrecord");
+    bool ok = db.open();
+    if(!ok)
+        std::cerr << "Error in opening database!\n";
 
     SEAL * train = NULL, * test = NULL;
     FILE *fres = NULL;
@@ -97,6 +119,7 @@ int main(int argc, char ** argv)
 
     //default descriptor block
     boost::shared_ptr<FingerPrints2s> fp2s( new FingerPrints2s());
+    boost::shared_ptr<Spectrophores> Spectr( new Spectrophores());
 
     boost::shared_ptr<CMFA> cmfa (new CMFA());
 
@@ -113,7 +136,7 @@ int main(int argc, char ** argv)
     boost::shared_ptr<AbrahamKernelE> abrahame (new AbrahamKernelE());
     boost::shared_ptr<AbrahamKernelS> abrahams (new AbrahamKernelS());
 
-    boost::shared_ptr<GaussKernel> gauss( new GaussKernel(fp2s.get()));
+    boost::shared_ptr<GaussKernel> gauss( new GaussKernel(Spectr.get()));
     boost::shared_ptr<TanimotoKernel > tanimoto (new TanimotoKernel(fp2s.get()));
 
     double usep [MAX_PARAMS];
@@ -300,6 +323,217 @@ int main(int argc, char ** argv)
         return 0;
     }
 
+    if(do_prognosis)
+    {
+        printf("Prognosis mode...\n");
+        FILE * fp = fopen(save_model, "rb");
+        if(fp == NULL)
+        {
+            fprintf(stderr, "Can't open file %s.\n", save_model);
+            return 1;
+        }
+
+        char str[255];
+        do
+        {
+            fgets(str, 255, fp);
+        }while(str[0] == '#');
+
+        std::stringstream sin;
+
+        int N = 0;
+        sscanf(str, "Structures: %d\n", &N);
+        if(N == 0)
+        {
+            fprintf(stderr, "Number of structures in the model must be greater than zero.\n");
+            return 1;
+        }
+
+
+        std::string buf;
+        for(int i =0; i< N && !feof(fp); i++)
+        {
+
+            do {
+                fgets(str, 255, fp);
+                buf += str;
+            } while(strncmp("$$$$", str, 4));
+        }       
+
+        sin.str(buf);
+        obconversion.SetInStream(&sin);
+        obconversion.SetInFormat("sdf");
+
+        SEAL * mols = new SEAL(&sin, &props);
+
+        mols->go();
+        printf("Loaded: %d of model's molecules.\n", mols->getNumberOfMolecules());
+
+        N = 0;
+
+        fscanf(fp, "Kernels: %d\n", &N);
+        if(N == 0)
+        {
+            fprintf(stderr, "The number of kernels must be greater than zero.\n");
+            return 1;
+        }
+
+        cmfa->clear();
+
+        printf("Kernels: %d\n", N);
+        for ( int i = 0; i < N; ++i)
+        {
+            char kernel[100], descr[100];
+            fgets(str, 255, fp);
+
+            descr[0] = '\0';
+            char * p = strrchr(str,':');
+            if(p)
+            {
+                sprintf(descr,"%s", p+1);
+                descr[strlen(descr) - 1] = '\0';
+                *p='\0';
+
+            }
+            else
+                str[strlen(str) - 1 ] = '\0';
+
+            sprintf(kernel,"%s", str);
+            printf("Descriptors: %s. Kernel: %s.\n", descr, kernel);
+
+            DescriptorFactory * descrfact;
+
+            if(!strcmp("Spectrophores", descr))
+                descrfact = Spectr.get();
+            else if(!strcmp("FP2", descr))
+                descrfact = fp2s.get();
+
+            if(!strcmp(kernel, "Gaussian"))
+            {
+                printf("Loading gauss %s\n", descrfact->getName().c_str());
+                cmfa->addKernel(new GaussKernel(descrfact));
+            }
+            else if(!strcmp(kernel, "Tanimoto"))
+            {
+                printf("Loading tanimoto %s\n", descrfact->getName().c_str());
+                cmfa->addKernel(new TanimotoKernel(descrfact));
+            }
+            else if(!strcmp(kernel, "Electro-Static"))
+            {
+                printf("loading Electro-Static kernel.\n");
+                cmfa->addKernel(new ElectroStaticKernel());
+            }
+            else if(!strcmp(kernel, "Steric"))
+            {
+                printf("loading Steric kernel.\n");
+                cmfa->addKernel(new StericKernel());
+            }
+            else if(!strcmp(kernel, "Hydrophobic"))
+            {
+                printf("loading Hydrophobic kernel.\n");
+                cmfa->addKernel(new HydrophobicKernel());
+            }
+        }
+
+        N= 0;
+        fscanf(fp, "Parameters: %d\n", &N);
+        if(N == 0)
+        {
+            fprintf(stderr, "The number of parameters must be greater than zero.\n");
+            return 1;
+        }
+
+        for(int i=0;i< N; ++i)
+        {
+            fscanf(fp, "%lf", &usep[i]);
+        }
+
+        cmfa->setParameters(usep);
+
+        for(int i =0; i< N; ++i)
+            printf("%g ", usep[i]);
+        printf("\n");
+
+        fscanf(fp, "\nMachine: %s\n", str);
+        printf("Machine: %s\n", str);
+
+        Machine * machine;
+
+        if(!strcmp("1-SVM", str))
+        {
+            OneClassSVM * svm = new OneClassSVM();
+
+            if(svm->load(fp))
+            {
+                printf("1-SVM loaded.\n");
+                svm->setCMFA(cmfa.get());
+                svm->init();
+                svm->setData(mols,NULL);
+                svm->setParameters(usep);
+                cmfa->setParameters(usep);
+                machine = svm;
+            }
+        }
+        else if(!strcmp("SVR", str))
+        {
+            Svr * svm = new Svr();
+
+            if(svm->load(fp))
+            {
+                printf("SVR loaded.\n");
+                svm->setCMFA(cmfa.get());
+                svm->init();
+                svm->setData(NULL, mols);
+                svm->setParameters(usep);
+                cmfa->setParameters(usep);
+                machine = svm;
+            }
+        }
+        fclose(fp);
+
+        //model read
+
+         std::ifstream ifs(sdf_test);
+
+         obconversion.SetInFormat("SDF");
+         obconversion.SetInStream(&ifs);
+
+         OBMol mol;
+
+         long struc = 0;
+         while(obconversion.Read(&mol))
+         {
+             mol.DeleteHydrogens();
+
+             char st[100];
+             sprintf(st, "%ld", struc);
+
+             OBPairData  * data = new OBPairData();
+
+             data->SetAttribute("prognosis");
+             data->SetValue(st);
+             data->SetOrigin(userInput);
+
+             mol.SetData(data);
+
+             OBAtom *atom;
+             FOR_ATOMS_OF_MOL(atom, mol)
+             {
+                 Fields * ff = new Fields();
+                 ff->calcValues(&*atom);
+                 atom->SetData(ff);
+             }
+
+             machine->predict(&mol);
+
+             struc++;
+         }
+
+
+
+        return 0;
+    }
+
     //building a model
 
     if(cmfa->count() == 0)
@@ -368,7 +602,7 @@ int main(int argc, char ** argv)
     //machine->create();
     machine->create_random(max_iter);
 
-    //machine->save(save_model);
+    machine->save(save_model);
 
     if(fres != NULL) fclose(fres);
 

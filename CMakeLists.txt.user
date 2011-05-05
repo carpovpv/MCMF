@@ -104,6 +104,18 @@
     <value key="ProjectExplorer.ProjectConfiguration.DisplayName" type="QString">prognosis</value>
     <value key="ProjectExplorer.ProjectConfiguration.Id" type="QString">CMakeProjectManager.CMakeRunConfiguration.</value>
    </valuemap>
+   <valuemap key="ProjectExplorer.Target.RunConfiguration.13" type="QVariantMap">
+    <value key="CMakeProjectManager.BaseEnvironmentBase" type="int">2</value>
+    <value key="CMakeProjectManager.CMakeRunConfiguation.Title" type="QString">pseal</value>
+    <value key="CMakeProjectManager.CMakeRunConfiguration.Arguments" type="QString"></value>
+    <value key="CMakeProjectManager.CMakeRunConfiguration.Target" type="QString">/home/pavel/git/github/bin/seal/thread/pseal</value>
+    <value key="CMakeProjectManager.CMakeRunConfiguration.UseTerminal" type="bool">false</value>
+    <valuelist key="CMakeProjectManager.CMakeRunConfiguration.UserEnvironmentChanges" type="QVariantList"/>
+    <value key="CMakeProjectManager.CMakeRunConfiguration.UserWorkingDirectory" type="QString"></value>
+    <value key="CMakeProjectManager.CMakeRunConfiguration.WorkingDirectory" type="QString">/home/pavel/git/github/bin/seal/thread</value>
+    <value key="ProjectExplorer.ProjectConfiguration.DisplayName" type="QString">pseal</value>
+    <value key="ProjectExplorer.ProjectConfiguration.Id" type="QString">CMakeProjectManager.CMakeRunConfiguration.</value>
+   </valuemap>
    <valuemap key="ProjectExplorer.Target.RunConfiguration.2" type="QVariantMap">
     <value key="CMakeProjectManager.BaseEnvironmentBase" type="int">2</value>
     <value key="CMakeProjectManager.CMakeRunConfiguation.Title" type="QString">seal</value>
@@ -200,7 +212,7 @@
     <value key="ProjectExplorer.ProjectConfiguration.DisplayName" type="QString">spct</value>
     <value key="ProjectExplorer.ProjectConfiguration.Id" type="QString">CMakeProjectManager.CMakeRunConfiguration.</value>
    </valuemap>
-   <value key="ProjectExplorer.Target.RunConfigurationCount" type="int">13</value>
+   <value key="ProjectExplorer.Target.RunConfigurationCount" type="int">14</value>
   </valuemap>
  </data>
  <data>

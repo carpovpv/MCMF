@@ -26,6 +26,21 @@
 #include <iostream>
 #include <stdlib.h>
 
+#include <openbabel/obconversion.h>
+#include <openbabel/mol.h>
+
+#include <pthread.h>
+
+using namespace OpenBabel;
+
+KS_Seal * pseal;
+
+void *pseal_align(void *)
+{
+    printf("Thread\n");
+    pseal->go();
+}
+
 int main(int argc , char **argv)
 {
     double wE = 1.0;
@@ -33,6 +48,10 @@ int main(int argc , char **argv)
     double alpha = 0.5;
     char * fp = NULL;
     int nprobes = 10;
+    bool align = false;
+    int status;
+
+    pthread_t thread;
 
     while(argc-- >0)
     {
@@ -46,7 +65,8 @@ int main(int argc , char **argv)
             alpha = atof(argv[argc] + 8);
         else if(!strncmp(argv[argc], "--np=",5))
             nprobes = atoi(argv[argc] + 5);
-
+        else if(!strncmp(argv[argc], "--align",7 ))
+            align = true;
     }
 
     std::cerr << "Filename: " << fp << std::endl;
@@ -57,12 +77,54 @@ int main(int argc , char **argv)
 
     try
     {
-        SEAL * seal = new KS_Seal(fp,
+        KS_Seal * seal = new KS_Seal(fp,
                                   alpha,
                                   wE,
                                   wS,
                                   nprobes);
-        seal->go();
+
+        //for second thread
+        pseal = new KS_Seal(fp,
+                               alpha,
+                               wE,
+                               wS,
+                               nprobes);
+
+        if(align)
+        {
+            OBConversion conv;
+            conv.SetInFormat("SDF");
+            conv.SetInStream(&std::cin);
+
+            seal->setFirst(false);
+            pseal->setFirst(false);
+
+            OBMol mol, pmol;
+            while(true)
+            {
+                /*if(!conv.Read(&pmol))
+                    break;
+                pmol.Center();
+                pseal->set2Mol(pmol);
+
+                pthread_create(&thread, NULL, pseal_align, &status);
+*/
+                if(!conv.Read(&mol))
+                {
+                //    pthread_join(thread, NULL);
+                    break;
+                }
+
+                mol.Center();
+                seal->set2Mol(mol);
+                seal->go();
+
+                //pthread_join(thread, NULL);
+            }
+
+        }
+        else
+             seal->go();
 
         delete seal;
     }

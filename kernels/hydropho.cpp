@@ -26,7 +26,7 @@ HydrophobicKernel::HydrophobicKernel() : CKernel()
     name =  "Hydrophobic";
 }
 
-double HydrophobicKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma, bool norm)
+double HydrophobicKernel::calculate(OBMol * mol1, bool regime , OBMol * mol2, double gamma, bool norm)
 {
 
     double  s = 0.0;
@@ -46,22 +46,35 @@ double HydrophobicKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma, bo
               s += w1 * w2 * exp ( -gamma / 4.0 * ( pow((a->x() - b->x()), 2) + pow((a->y() - b->y()), 2)  + pow((a->z() - b->z()), 2)  ));
         }
     }
+    s = s * COEFF;
     if(norm)
     {
 
-       if(norms.find(mol1) == norms.end())
-       {
-           norms[mol1] = calculate(mol1, mol1, gamma, false);
-       }
+        if(norms.find(mol2) == norms.end())
+            norms[mol2] = calculate(mol2, regime, mol2, gamma, false);
 
-       if(norms.find(mol2) == norms.end())
-       {
-           norms[mol2] = calculate(mol2, mol2, gamma, false);
-       }
+        if(regime)
+        {
+            if(norms.find(mol1) == norms.end())
+                norms[mol1] = calculate(mol1, regime, mol1, gamma, false);
+        }
+        else
+        {
+            std::string c = mol1->GetData("prognosis")->GetValue();
+            long cur = atol(c.c_str());
 
-       s = s/ sqrt(norms[mol1] * norms[mol2]);
+            //printf("MolID=: %ld %ld\n", cur, prev);
+            if( prev == cur)
+                return s / sqrt(curnorm * norms[mol2]);
+
+            prev = cur;
+            curnorm  = calculate(mol1, regime, mol1, gamma, false);
+            return s / sqrt(curnorm * norms[mol2]);
+        }
+
+        s = s/ sqrt(norms[mol1] * norms[mol2]);
     }
-    return s * COEFF;
+    return s;
 
 }
 

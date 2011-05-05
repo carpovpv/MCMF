@@ -44,7 +44,7 @@ public:
     virtual bool setData(SEAL * train_mols, SEAL * test_mols);
     virtual double statistic() = 0;
 
-    virtual bool load(const char * filename) {}
+    virtual bool load(FILE * ) {}
     virtual bool save(const char * filename) = 0;
 
     virtual bool build(const double *,

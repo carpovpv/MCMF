@@ -9,7 +9,7 @@ class StericKernel: public CKernel
 {
 public:
     StericKernel();  
-    virtual double calculate(OBMol *, OBMol *, double , bool norm = false);
+    virtual double calculate(OBMol *, bool,  OBMol *, double , bool norm = false);
 };
 
 #endif

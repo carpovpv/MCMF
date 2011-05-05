@@ -34,9 +34,15 @@ using namespace OpenBabel;
 using namespace boost;
 
 
+void SEAL::setFirst(bool f)
+{
+    first = f;
+}
+
 SEAL::SEAL(const char * sdf,  const std::vector<std::string> * props)
 {
 
+    first = true;
     std::ifstream ifs(sdf);
 
     if (!ifs)
@@ -47,12 +53,13 @@ SEAL::SEAL(const char * sdf,  const std::vector<std::string> * props)
     ifs.close();
 }
 
-SEAL::SEAL(std::ifstream *ifs, const std::vector<std::string> *props, int mn)
+SEAL::SEAL(std::istream *ifs, const std::vector<std::string> *props, int mn)
 {
+    first = true;
     readStructures(ifs, props, mn);
 }
 
-void SEAL::readStructures(std::ifstream *ifs, const std::vector<std::string> *props, int mn)
+void SEAL::readStructures(std::istream *ifs, const std::vector<std::string> *props, int mn)
 {
     conv = new OBConversion(ifs, &std::cout);
     conv->SetInAndOutFormats("SDF","SDF");
@@ -101,11 +108,10 @@ void SEAL::readStructures(std::ifstream *ifs, const std::vector<std::string> *pr
 
 void SEAL::go()
 {
-    for(int i=0; i< mols.size(); ++i)
-        mols[i].Center();
 
     align();
 
+    if(first)
     for(int i =0; i< m_mols.size(); ++i)
     {
         OBAtom *atom;

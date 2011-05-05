@@ -34,7 +34,7 @@ public:
     FingerPrints2s();
     ~FingerPrints2s();
     bool needMapping() const;
-    const std::vector < struct Descriptor > & getDescriptors(OBMol *);
+    const std::vector < struct Descriptor > & getDescriptors(OBMol *, bool);
 
 private:
 

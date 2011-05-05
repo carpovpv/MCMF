@@ -25,13 +25,15 @@ TanimotoKernel::TanimotoKernel(DescriptorFactory * descr) : CKernel( descr)
 {
     name =  "Tanimoto";
     m_remap = descr != NULL ? descr->needMapping() : false;
+    if(descr != NULL)
+        name += ":" + descr->getName();
 }
 
 TanimotoKernel::~TanimotoKernel()
 {
 }
 
-double TanimotoKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma, bool norm)
+double TanimotoKernel::calculate(OBMol * mol1, bool regime, OBMol * mol2, double gamma, bool norm)
 {
     if(m_remap)
     {
@@ -39,8 +41,8 @@ double TanimotoKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma, bool 
     else
     {
 
-        const std::vector< struct Descriptor>  &m1 = m_descrfactory->getDescriptors(mol1);
-        const std::vector< struct Descriptor>  &m2 = m_descrfactory->getDescriptors(mol2);
+        const std::vector< struct Descriptor>  &m1 = m_descrfactory->getDescriptors(mol1, regime);
+        const std::vector< struct Descriptor>  &m2 = m_descrfactory->getDescriptors(mol2, true);
 
         const unsigned n = m1.size();
 

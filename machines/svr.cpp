@@ -130,7 +130,7 @@ bool Svr::setData(SEAL *train_mols, SEAL *test_mols)
     if(train == NULL)
     {
         fprintf(stderr,"Train sets must be supplied.\n");
-        return false;
+        //return false;
     }
 
     s_data.clear();
@@ -288,7 +288,7 @@ bool Svr::build(const double * params, const std::vector<int> &flags, const std:
             OBMol *mol1 = train->getMolecule(mask[i]);
             OBMol *mol2 = train->getMolecule(mask[j]);
 
-            double K = m_cmfa->calculate(mol1, mol2);
+            double K = m_cmfa->calculate(mol1, true, mol2);
 
             problem.x[i_r][j_r+1].value = K;
             problem.x[j_r][i_r+1].value = K;
@@ -324,7 +324,7 @@ bool Svr::build(const double * params, const std::vector<int> &flags, const std:
             if(flags[j] == 0) continue;
 
             OBMol *mol2 = train->getMolecule(mask[j]);
-            double K = m_cmfa->calculate(mol1, mol2);
+            double K = m_cmfa->calculate(mol1, true, mol2);
 
             testing[i_p+1].value = K;
             testing[i_p+1].index = i_p+1;
@@ -365,7 +365,104 @@ bool Svr::build(const double * params, const std::vector<int> &flags, const std:
 
 bool Svr::save(const char * filename)
 {
+    std::string modelname = std::string(filename) + ".mdl";
+    FILE * fp = fopen(modelname.c_str(),"w");
+    if(fp)
+    {
+        fprintf(fp, "Structures: %d\n", train->getNumberOfMolecules());
 
+        std::stringstream st;
+
+        OBConversion conv(NULL, &st);
+        conv.SetOutFormat("SDF");
+        for(int i =0; i< train->getNumberOfMolecules(); ++i)
+            conv.Write(train->getMolecule(i));
+
+        fprintf(fp, "%s", st.rdbuf()->str().c_str());
+
+        fprintf(fp, "Kernels: %d\n", m_cmfa->count());
+
+        for(int i =0; i< m_cmfa->count(); ++i)
+            fprintf(fp, "%s\n", m_cmfa->getKernelName(i));
+
+        fprintf(fp, "Parameters: %d\n", m_NumParameters);
+        for(int i=0; i< m_NumParameters; ++i)
+            fprintf(fp, "%.5f ", Parameters[i]);
+        fprintf(fp, "\n");
+
+        fprintf(fp, "Machine: %s\n", getName().c_str());
+
+        param.nu = Parameters[0];
+        param.C = Parameters[1];
+
+        const int N = train->getNumberOfMolecules();
+
+        problem.l = N;
+
+        problem.y = (double *) calloc(N , sizeof(double));
+        problem.x = (struct svm_node **) calloc(N, sizeof(struct svm_node*));
+
+        for(int i= 0; i< N; ++i)
+            problem.x[i] = (struct svm_node *) calloc(N +2, sizeof(struct svm_node));
+
+        int i_r = -1;
+
+        for(int i =0; i< N; ++i)
+        {
+            i_r++;
+
+            problem.y[i_r] = s_data[i][0];
+
+           // problem.x[i_r][i_r+1].value = 1.0;
+           // problem.x[i_r][i_r+1].index = i_r+1;
+
+            problem.x[i_r][0].value = i_r+1;
+            problem.x[i_r][0].index = 0;
+
+            problem.x[i_r][N+1].value = 0.0;
+            problem.x[i_r][N+1].index = -1;
+
+            int j_r = i_r;
+            for(int j=i; j< N; ++j)
+            {
+                OBMol *mol1 = train->getMolecule(i);
+                OBMol *mol2 = train->getMolecule(j);
+
+                double K = m_cmfa->calculate(mol1, true, mol2);
+
+
+                problem.x[i_r][j_r+1].value = problem.x[j_r][i_r+1].value = K;
+
+                problem.x[i_r][j_r+1].index = j_r+1;
+                problem.x[j_r][i_r+1].index = i_r+1;
+                            j_r++;
+
+            }
+        }
+
+
+        model = svm_train(&problem, &param);
+
+        svm_save_model_fp(fp, model);
+
+        svm_free_and_destroy_model(&model);
+        svm_destroy_param(&param);
+
+        for(int i =0; i< N; ++i)
+        {
+            free(problem.x[i]);
+            problem.x[i] = NULL;
+        }
+
+        free(problem.x);
+        problem.x = NULL;
+
+        free(problem.y);
+        problem.y = NULL;
+
+    }
+
+    fclose(fp);
 }
 
 double Svr::statistic()
@@ -416,113 +513,6 @@ double Svr::statistic()
     //m_cmfa->clearNorms();
 
     return -RMSE;
-}
-
-void Svr::predict_decoys()
-{
-    param.nu = Parameters[0];
-
-    int rn = 0;
-    const int N = train->getNumberOfMolecules();
-
-    problem.l = N;
-
-    problem.y = (double *) calloc(N , sizeof(double));
-    problem.x = (struct svm_node **) calloc(N, sizeof(struct svm_node*));
-
-    for(int i= 0; i< N; ++i)
-        problem.x[i] = (struct svm_node *) calloc(N +2, sizeof(struct svm_node));
-
-    int i_r = -1;
-
-    for(int i =0; i< N; ++i)
-    {
-        i_r++;
-
-        problem.y[i_r] = 1.0;
-
-        problem.x[i_r][i_r+1].value = 1.0;
-        problem.x[i_r][i_r+1].index = i_r+1;
-
-        problem.x[i_r][0].value = i_r+1;
-        problem.x[i_r][0].index = 0;
-
-        problem.x[i_r][N+1].value = 0.0;
-        problem.x[i_r][N+1].index = -1;
-
-        int j_r = i_r;
-        for(int j=i; j< N; ++j)
-        {
-            OBMol *mol1 = train->getMolecule(i);
-            OBMol *mol2 = train->getMolecule(j);
-
-            double K = m_cmfa->calculate(mol1, mol2);
-
-            j_r++;
-            problem.x[i_r][j_r+1].value = problem.x[j_r][i_r+1].value = K;
-
-            problem.x[i_r][j_r+1].index = j_r+1;
-            problem.x[j_r][i_r+1].index = i_r+1;
-
-        }
-    }
-
-    model = svm_train(&problem, &param);
-
-    //predict +1
-
-    struct svm_node * testing = (struct svm_node *) calloc(N+2 , sizeof(struct svm_node));
-
-    for(int i =0; i< test->getNumberOfMolecules(); ++i)
-    {
-
-        testing[0].value = 1;
-        testing[0].index = 0;
-
-        testing[N+1].value = 0.0;
-        testing[N+1].index = -1;
-
-        OBMol *mol1 = test->getMolecule(i);
-
-        int i_p = 0;
-        for(int j=0; j< N; ++j)
-        {
-
-            OBMol *mol2 = train->getMolecule(j);
-            double K = m_cmfa->calculate(mol1, mol2);
-
-            testing[i_p+1].value = K;
-            testing[i_p+1].index = i_p+1;
-
-            i_p++;
-
-        }
-
-        struct result * res = create_result();
-        res->y_pred[0] = svm_predict(model, testing);
-        res->y_real[0] = 0.0;
-
-        results.push_back(res);
-
-    }
-
-    free(testing);
-
-    for(int i =0; i< rn; ++i)
-    {
-        free(problem.x[i]);
-        problem.x[i] = NULL;
-    }
-
-    free(problem.x);
-    problem.x = NULL;
-
-    free(problem.y);
-    problem.y = NULL;
-
-    svm_free_and_destroy_model(&model);
-    svm_destroy_param(&param);
-
 }
 
 bool Svr::predict(OBMol * mol)

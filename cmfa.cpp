@@ -22,7 +22,7 @@
 
 CMFA::CMFA()
 {
-    m_norm = false;
+    m_norm = true;
 }
 
 CMFA::~CMFA()
@@ -36,23 +36,26 @@ void CMFA::setNormalise(bool norm)
 
 }
 
-double CMFA::calculate(OBMol *mol1, OBMol * mol2)
+double CMFA::calculate(OBMol *mol1, bool regime, OBMol * mol2)
 {
-
     struct molkey mol;
-    if( reinterpret_cast<int *> (mol1) < reinterpret_cast<int *> (mol2) )
+    if(regime)
     {
-        mol.first = mol1;
-        mol.second = mol2;
-    }
-    else
-    {
-        mol.first = mol2;
-        mol.second = mol1;
-    }
 
-    if(gramm.find(mol) != gramm.end())
-        return gramm[mol];
+        if( reinterpret_cast<int *> (mol1) < reinterpret_cast<int *> (mol2) )
+        {
+            mol.first = mol1;
+            mol.second = mol2;
+        }
+        else
+        {
+            mol.first = mol2;
+            mol.second = mol1;
+        }
+
+        if(gramm.find(mol) != gramm.end())
+            return gramm[mol];
+    }
 
     double s = 0.0;
     double hh = 0.0;
@@ -62,27 +65,29 @@ double CMFA::calculate(OBMol *mol1, OBMol * mol2)
     for( ; i< m_kernels.size() -1; ++i)
     {
         CKernel * kernel = m_kernels[i];
-        double p = kernel->calculate(mol1, mol2, m_h[i*2], m_norm);
+        double p = kernel->calculate(mol1, regime, mol2, m_h[i*2], m_norm);
 
         s+= m_h[i*2 +1] * p;
         hh+=m_h[i*2+1];
     }
 
     CKernel * kernel = m_kernels[m_kernels.size() -1];
-    double p = kernel->calculate(mol1, mol2, m_h[i*2], m_norm);
+    double p = kernel->calculate(mol1, regime, mol2, m_h[i*2], m_norm);
+    //printf("-Kernel: %g %d %g\n", s, gramm.size(), p);
 
     s+= (1.0- hh) * p;
 
-    gramm[mol] = s;
+    if(regime)
+        gramm[mol] = s;
 
-    //printf("Kernel: %g %d\n", s, gramm.size());
+    //printf("Kernel: %g %d %g\n", s, gramm.size(), hh);
     return s;
 
 }
 
 void CMFA::clearCache()
 {
-    printf("Gramm size: %d\n", gramm.size());
+    //printf("Gramm size: %d\n", gramm.size());
     gramm.clear();
     clearNorms();
 }

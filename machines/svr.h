@@ -58,8 +58,6 @@ private:
     int NP;
     double SD, A;
 
-    void predict_decoys();
-
     std::vector< std::string > * m_props;
 
     std::vector< std::vector < double > > m_data; //original data

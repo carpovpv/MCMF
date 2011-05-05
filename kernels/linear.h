@@ -7,6 +7,6 @@ class LinearKernel: public CKernel
 {
 public:
     LinearKernel(DescriptorFactory *);
-    double calculate(OBMol *, OBMol *, double, bool norm = false );
+    double calculate(OBMol *, bool, OBMol *, double, bool norm = false );
 };
 #endif // LINEAR_H
