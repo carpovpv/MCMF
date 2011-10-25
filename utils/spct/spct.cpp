@@ -71,7 +71,7 @@ int main(int argc, char **argv)
 
 		training.push_back(temp);
 	}
-	const double step = 0.0001;
+        const double step = (maxh - minh) / 10000;
 
 	for(double h=minh-0.1*step; h<=maxh+0.1*step; h+=step)
 		calc(&training, h);

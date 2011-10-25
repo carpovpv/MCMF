@@ -62,11 +62,6 @@ find_package(Boost REQUIRED)
 include_directories(${OPENBABEL2_INCLUDE_DIR})
 include_directories(${Boost_INCLUDE_DIRS})
 
-find_package( Qt4 REQUIRED)
-include (${QT_USE_FILE})
-
-INCLUDE_DIRECTORIES(${QT_QTSQL_INCLUDE_DIR})
-
 add_subdirectory(${PROJECT_SOURCE_DIR}/seal)
 add_subdirectory(${PROJECT_SOURCE_DIR}/seal/thread)
 add_subdirectory(${PROJECT_SOURCE_DIR}/nnet)
@@ -84,7 +79,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/utils/fp2)
 set(LIBS ${OPENBABEL2_LIBRARIES})
 
 add_executable ( ${PROJECT} ${HEADERS} ${SOURCE} )
-target_link_libraries(MCMF ${LIBS} nlopt ${QT_LIBRARIES} ${QT_QTSQL_LIBRARY} )
+target_link_libraries(MCMF ${LIBS} nlopt ${QT_LIBRARIES} )
 
 install (TARGETS MCMF DESTINATION ${CMAKE_BINARY_DIR}/bin)
 

@@ -85,21 +85,21 @@ void Svr::setCMFA(CMFA *cmfa)
     lp = (double * ) calloc(m_NumParameters , sizeof(double));
     mp = (double * ) calloc(m_NumParameters , sizeof(double));
 
-    lp[0] = 0.001;
+    lp[0] = 0.00001;
     lp[1] = 1e-3;
     for(int i =2; i< m_NumParameters; ++i)
-        lp[i] = (i%2) ? 0 : 0.0001;
+        lp[i] =  0.0001;
 
     mp[0] = 0.999;
     mp[1] = 10.000;
     for(int i =2; i< m_NumParameters; ++i)
-        mp[i] = (i%2) ? 1.0 : 10.0 ;
+        mp[i] = 1.0 ;
 
-    Parameters[0] = 0.4;
+    Parameters[0] = 0.001;
     Parameters[1] = 0.2;
 
     for(int i =2; i< m_NumParameters; ++i)
-        Parameters[i] = (i%2) ? 0.0001 : 0.0001 ;
+        Parameters[i] = 0.0001 ;
 
 }
 
@@ -142,7 +142,7 @@ bool Svr::setData(SEAL *train_mols, SEAL *test_mols)
         for(int j=0; j< NP; ++j)
         {
             std::string data = train->getMolecule(i)->GetData(m_props->at(j))->GetValue();
-            double d = log10(0.1+atof(data.c_str()));
+            double d = log(0.001+ atof(data.c_str()));
 
             //double d = atof(data.c_str());
             temp.push_back(d);
@@ -204,14 +204,16 @@ bool Svr::setData(SEAL *train_mols, SEAL *test_mols)
         l2[i] = max_p[i] + (max_p[i] - min_p[i]) / L;
     }
 
-    //scale to [0.1; 0.9]
+    //scale to [0,1; 0,9]
 
     for(int i = 0; i< m_data.size() ; ++i)
     {
         std::vector< double > temp(NP);
         for(int j=0; j< NP; ++j)
+        {
             temp[j] = 0.9 + 0.8 *(m_data[i][j] - l2[j]) / (l2[j]-l1[j]);
-
+            //printf("Prop: %f\n", temp[j]);
+        }
         s_data.push_back(temp);
     }
 
@@ -485,7 +487,7 @@ double Svr::statistic()
     for(int i=0; i< n; ++i)
     {
        double y = (m_data[i][0] - results[i]->y_pred[0]);
-       fprintf(fp,"%g %g\n", m_data[i][0], results[i]->y_pred[0] );
+       fprintf(fp,"%g %g\n", results[i]->y_real[0], results[i]->y_pred[0] );
        PRESS += y*y;
 
        xy += m_data[i][0] *  results[i]->y_pred[0];
@@ -512,7 +514,7 @@ double Svr::statistic()
 
     //m_cmfa->clearNorms();
 
-    return -RMSE;
+    return q2;
 }
 
 bool Svr::predict(OBMol * mol)

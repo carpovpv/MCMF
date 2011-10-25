@@ -52,9 +52,6 @@
 #include <errno.h>
 #include <boost/shared_ptr.hpp>
 
-#include <QtCore/QCoreApplication>
-#include <QSqlDatabase>
-
 const int EX_USAGE = 127;
 const int MAX_PARAMS = 20;
 
@@ -67,17 +64,7 @@ void help()
 int main(int argc, char ** argv)
 {
 
-    QCoreApplication a();
-
-
-    QSqlDatabase db = QSqlDatabase::addDatabase("QIBASE");
-    db.setHostName("localhost");
-    db.setDatabaseName("zinc");
-    db.setUserName("sysdba");
-    db.setPassword("cdrecord");
-    bool ok = db.open();
-    if(!ok)
-        std::cerr << "Error in opening database!\n";
+    srand(time(NULL));
 
     SEAL * train = NULL, * test = NULL;
     FILE *fres = NULL;
@@ -136,7 +123,8 @@ int main(int argc, char ** argv)
     boost::shared_ptr<AbrahamKernelE> abrahame (new AbrahamKernelE());
     boost::shared_ptr<AbrahamKernelS> abrahams (new AbrahamKernelS());
 
-    boost::shared_ptr<GaussKernel> gauss( new GaussKernel(Spectr.get()));
+    boost::shared_ptr<GaussKernel> gauss( new GaussKernel(fp2s.get()));
+    boost::shared_ptr<GaussKernel> gaussSpect( new GaussKernel(Spectr.get()));
     boost::shared_ptr<TanimotoKernel > tanimoto (new TanimotoKernel(fp2s.get()));
 
     double usep [MAX_PARAMS];
@@ -214,6 +202,8 @@ int main(int argc, char ** argv)
                         cmfa->addKernel(abrahame.get());
                     else if(!strcmp(s,"abrahams"))
                         cmfa->addKernel(abrahams.get());
+                    else if(!strcmp(s,"gaussspectr"))
+                        cmfa->addKernel(gaussSpect.get());
                     else
                     {
                         fprintf(stderr,"Unknown kernel %s.\n", s);
@@ -433,6 +423,11 @@ int main(int argc, char ** argv)
                 printf("loading Hydrophobic kernel.\n");
                 cmfa->addKernel(new HydrophobicKernel());
             }
+            else if(!strcmp(kernel, "Linear"))
+            {
+                printf("loading Linear kernel.\n");
+                cmfa->addKernel(new LinearKernel(descrfact));
+            }
         }
 
         N= 0;
@@ -527,6 +522,7 @@ int main(int argc, char ** argv)
              machine->predict(&mol);
 
              struc++;
+             //fprintf(stderr,"%d\n", struc);
          }
 
 

@@ -85,7 +85,7 @@ find_min_max (double M)
       else if (data.at (i).at (j) < normalization_min.at (j))
         normalization_min.at (j) = data.at (i).at (j);
 
-  //enlatge interval
+  //enlarge interval
   for (int j = 0; j < data.at (0).size (); ++j){
 
         double x0 = normalization_max.at (j) ;
@@ -100,6 +100,7 @@ find_min_max (double M)
     {
       norm_max.push_back ( prop.at(0).at (i));
       norm_min.push_back ( prop.at(0).at (i));
+
     }
   for (int i = 0; i < prop.size (); ++i)
     for (int j = 0; j < prop.at(i).size(); ++j)
@@ -118,21 +119,18 @@ find_min_max (double M)
 
         norm_max.at (j) = (x0 + y0 + M*(x0-y0))/2.0;
         norm_min.at (j) = -norm_max[j] + x0 +y0;
-
-//	std::cout << norm_max[j] << " " << norm_min[j] << std::endl;
-
  }
 
   std::cout << "Normalization ... ";
 
-  for (int i = 0; i < data.size (); ++i)
+  /*for (int i = 0; i < data.size (); ++i)
     for (int j = 0; j < data.at (0).size (); ++j)
       data.at (i).at (j) =
         0.8 * data.at (i).at (j) / (normalization_max.at (j) -
                                     normalization_min.at (j)) + 0.9 -
         0.8 * normalization_max.at (j) / (normalization_max.at (j) -
                                           normalization_min.at (j));
-
+*/
   for (int i = 0; i < prop.size (); ++i)
     {
       for (int j = 0; j < prop.at (0).size (); ++j)
@@ -142,8 +140,10 @@ find_min_max (double M)
               0.8 * prop.at (i).at (j) / (norm_max.at (j) - norm_min.at (j)) +
               0.9 - 0.8 * norm_max.at (j) / (norm_max.at (j) -
                                              norm_min.at (j));
+            //printf("%f %f %f\n", prop[i][j], norm_max[j], norm_min[j]);
           }
     }
+
   std::cout << "... fininshed." << std::endl;
 }
 
@@ -626,7 +626,7 @@ else
 
       printf("Number of input neurons: %d\n",N);
 
- // find_min_max (M);
+  //find_min_max (M);
 
   time_t _time;
   time(&_time);
@@ -658,7 +658,9 @@ else
         error = net->autotrain (train, valid, epochs, 1.05f);
 
   std::cout << "Final validation error: " << error << std::endl;
- /*
+
+  /*это закоментить ибо тренинг в одноклассовой не нужен.
+
   double * yy = new double[1024];
   double * rr = new double[1024];
 
@@ -669,9 +671,6 @@ else
         for (int j = 0; j < data.at (0).size (); ++j)
         yy[j] = data.at (training.at (i)).at (j);
         net->run (yy, rr);
-
-        fprintf(stderr,"\n");
-
   }
 
   fprintf(stderr,"Validation:\n");
@@ -707,9 +706,11 @@ else
         fprintf(stderr,"%g %g\n", yy[0], rr[0]);
 
   }
-  */
-//  delete yy;
-//  delete rr;
+
+  delete yy;
+  delete rr;
+//конец комментирования одноклассовой
+*/
 
 time(&_time);
 printf("Finished at: %s\n",ctime(&_time));

@@ -9,6 +9,10 @@
 #include <openbabel/obconversion.h>
 #include <openbabel/mol.h>
 
+#include <openbabel/rotamer.h>
+#include <openbabel/rotor.h>
+#include <openbabel/obutil.h>
+
 #include <pthread.h>
 #include <nlopt.h>
 
@@ -105,7 +109,7 @@ double score_function(unsigned , const double *p, double *, void * mol)
     s *= -1.0;
 
     pmol->SetCoordinates(coords);
-//    fprintf(stderr, "SL %g\n", s);
+//  fprintf(stderr, "SL %g\n", s);
 
     delete [] coords;
     return s;
@@ -131,6 +135,14 @@ void *pseal_align(void * pmol)
     //fprintf(stderr,"Thread\n");
     OBMol * mol = static_cast<OBMol *> ( pmol );
 
+    const int NCOORD = mol->NumAtoms() * 3;
+
+    double * bcoord = (double *) calloc(NCOORD, sizeof(double));
+    double * tcoord = mol->GetCoordinates();
+
+    for(int tc=0; tc< NCOORD; ++tc)
+        bcoord[tc] = tcoord[tc];
+
     //printf("Mol %d\n", mol->NumAtoms());
 
     nlopt_opt opt = nlopt_create(NLOPT_LN_BOBYQA, 7);
@@ -151,6 +163,8 @@ void *pseal_align(void * pmol)
     double smin = RAND_MAX;
     double sp[7];
 
+    //начало цикла оптимизации
+
     std::vector<int> was1, was2;
     for(int l = 0; l < nprobes; ++l)
     {
@@ -163,7 +177,7 @@ void *pseal_align(void * pmol)
 
         bool k = false;
         do {
-            for_t1 = 1 + (double) rand() / RAND_MAX * N1;
+            for_t1 = 1 + (double) std::rand() / RAND_MAX * N1;
             k = false;
             if(find(was1.begin(), was1.end(), for_t1) == was1.end())
             {
@@ -173,10 +187,12 @@ void *pseal_align(void * pmol)
             cc++;
         } while(cc < max_count && k==false);
 
+
+
         unsigned int for_t2;
         cc = 0;
         do {
-            for_t2 = 1 + (double) rand() / RAND_MAX * N2;
+            for_t2 = 1 + (double) std::rand() / RAND_MAX * N2;
             k = false;
             if(find(was2.begin(), was2.end(), for_t1) == was2.end())
             {
@@ -198,10 +214,10 @@ void *pseal_align(void * pmol)
         q[5] = atom2->GetY() - atom1->GetY();
         q[6] = atom2->GetZ() - atom1->GetZ();
 
-        q[0] = (double) rand() / RAND_MAX  - 0.5;
-        q[1] = (double) rand() / RAND_MAX  - 0.5;
-        q[2] = (double) rand() / RAND_MAX  - 0.5;
-        q[3] = (double) rand() / RAND_MAX  - 0.5;
+        q[0] = (double) std::rand() / RAND_MAX  - 0.5;
+        q[1] = (double) std::rand() / RAND_MAX  - 0.5;
+        q[2] = (double) std::rand() / RAND_MAX  - 0.5;
+        q[3] = (double) std::rand() / RAND_MAX  - 0.5;
 
         double p[7];
 
@@ -211,9 +227,13 @@ void *pseal_align(void * pmol)
             smin = s;
             for(int i=0; i< 7; ++i)
                 sp[i] = p[i];
-        }
 
+        }
+        //fprintf(stderr, "Probe: %d\n", l);
     }
+
+    // окончание цикла оптимизации
+
 
     double qv[9];
     vector3 t (sp[4], sp[5], sp[6]);
@@ -231,6 +251,9 @@ void *pseal_align(void * pmol)
     }
 
     nlopt_destroy(opt);
+    free(bcoord);
+
+    //fprintf(stderr, "Return func\n");
 
     return NULL;
 }
@@ -295,6 +318,8 @@ int main(int argc , char **argv)
     ifs.close();
     conv.SetInStream(&std::cin);
 
+    conv.Write(templ);
+
     OBMol mol, pmol;
     while(true)
     {
@@ -311,8 +336,8 @@ int main(int argc , char **argv)
         {
             pthread_create(&pt, NULL, pseal_align, &pmol);
             pthread_join(pt, NULL);
+            pseal_align(&pmol);
             conv.Write(&pmol);
-
             break;
         }
 
@@ -328,6 +353,7 @@ int main(int argc , char **argv)
         conv.Write(&pmol);
 
         pthread_join(pt, NULL);
+
         conv.Write(&mol);
 
     }

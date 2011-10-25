@@ -21,6 +21,6 @@ int main(int argc, char **argv)
 
 	fclose(fp);
 
-	printf("AUC: = %g\n", S);
+	printf("AUC: = %.2f\n", S);
 	return 0;
 }

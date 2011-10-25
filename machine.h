@@ -61,7 +61,7 @@ public:
 
     static double optim(unsigned, const double *m_params, double *, void * ptr);
 
-    double create(nlopt_algorithm algo = NLOPT_LN_BOBYQA);
+    double create(nlopt_algorithm algo = NLOPT_LN_NELDERMEAD);
     double create_random(int maxiter = 3);
 
     virtual void init() {}

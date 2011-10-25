@@ -167,11 +167,10 @@ double Machine::create(nlopt_algorithm algo)
 /*
     FILE * fp = fopen("grid.search", "w");
 
-    double nu = 0.4;
-    //for(double nu = 0.001; nu < 0.8; nu += 0.05)
+    for(double nu = 0.001; nu < 0.8; nu += 0.05)
       for(double c = 1e-5; c< 10; c*=10)
     {
-        for(double g = 0.001; g < 0.2; g+=0.01)
+        for(double g = 0.0001; g < 10; g+=10)
         {
 
             Parameters[0] = nu;
@@ -184,7 +183,7 @@ double Machine::create(nlopt_algorithm algo)
             fflush(fp);
 
         }
-        //fprintf(fp,"\n");
+
 
     }
     fclose(fp);
@@ -195,9 +194,9 @@ double Machine::create(nlopt_algorithm algo)
     nlopt_opt opt = nlopt_create(algo, m_NumParameters);
     nlopt_set_max_objective(opt, optim, this);
 
-    nlopt_set_xtol_rel(opt, 1e-5);
+    nlopt_set_xtol_rel(opt, 1e-3);
     nlopt_set_stopval(opt, 0.96);
-    nlopt_set_ftol_rel(opt, 1e-5);
+    nlopt_set_ftol_rel(opt, 1e-3);
 
     nlopt_set_lower_bounds( opt, lp);
     nlopt_set_upper_bounds( opt, mp);
@@ -239,7 +238,7 @@ double Machine::create(nlopt_algorithm algo)
 double Machine::create_random(int max_iter)
 {
 
-      srand(time(NULL));
+
 
       double *best_params = (double *) calloc(m_NumParameters,sizeof(double));
       double best_rmse = -RAND_MAX;
@@ -251,6 +250,8 @@ double Machine::create_random(int max_iter)
 
       while(iter++<max_iter)
       {
+           srand(time(NULL));
+
            //double temp = create();
            double temp = optim(0, Parameters,NULL, this);
 
@@ -260,6 +261,7 @@ double Machine::create_random(int max_iter)
                    best_params[i] = Parameters[i];
                best_rmse = temp;
            }
+
 
            for(int i=0; i< m_NumParameters; ++i)
                Parameters[i] = lp[i] + (mp[i] - lp[i] - 0.1) / (1.00 * RAND_MAX) * rand();
@@ -286,6 +288,4 @@ double Machine::create_random(int max_iter)
 
       free(best_params);
 
-
 }
-

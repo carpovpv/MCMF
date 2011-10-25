@@ -23,10 +23,6 @@
 #include <fstream>
 #include <sstream>
 
-#include <QSqlQuery>
-#include <QSqlError>
-#include <QVariant>
-
 #include "../svm.h"
 
 int OneClassSVM::res_comp(struct res_auc  p1, struct res_auc  p2)
@@ -728,10 +724,12 @@ bool OneClassSVM::predict(OBMol * mol)
     }*/
 
     double y  = svm_predict(real_model, testing);
+    printf("%g\n", y);
 
-    printf("%s %d %g\n", mol->GetTitle(), y >= m_threshold ? 1 : 0 ,  y);
-    if(y >= m_threshold)
+
+   /* if(y >= m_threshold)
     {
+        printf("%s %d %g\n", mol->GetTitle(), y >= m_threshold ? 1 : 0 ,  y);
         QString title(mol->GetTitle());
         QSqlQuery query;
         query.prepare("select zincode from zinc where zincode = ?");
@@ -741,7 +739,7 @@ bool OneClassSVM::predict(OBMol * mol)
         if(query.next())
         {
             query.clear();
-            query.prepare("update zinc set fp2svm = ? where zincode = ?");
+            query.prepare("update zinc set electrostatic = ? where zincode = ?");
             query.addBindValue(y);
             query.addBindValue(title);
             query.exec();
@@ -756,13 +754,13 @@ bool OneClassSVM::predict(OBMol * mol)
             conv.Write(mol);
 
             query.clear();
-            query.prepare("insert into zinc(zincode, fp2svm, mol) values(?, ?, ?)");
+            query.prepare("insert into zinc(zincode, electrostatic, mol) values(?, ?, ?)");
             query.addBindValue(title);
             query.addBindValue(y);
             query.addBindValue(st.str().c_str());
             query.exec();
         }
-    }
+    }*/
 
 
     //m_cmfa->clearCache();
