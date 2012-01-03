@@ -8,8 +8,8 @@
 class StericKernel: public CKernel
 {
 public:
-    StericKernel();  
-    virtual double calculate(OBMol *, bool,  OBMol *, double , bool norm = false);
+    StericKernel();
+    virtual double calculate(OBMol *,  OBMol *, double, Mode mode = Training);
 };
 
 #endif

@@ -16,7 +16,7 @@ public:
                      AbrahamB,
                      AbrahamE,
                      AbrahamS
-                 };
+                   };
 
     double getValue(FieldType type);
     void calcValues(OBAtom *);

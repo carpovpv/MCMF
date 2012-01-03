@@ -9,28 +9,28 @@ class AbrahamKernelA: public CKernel
 {
 public:
     AbrahamKernelA();
-    virtual double calculate(OBMol *, bool, OBMol *, double , bool norm = false);
+    virtual double calculate(OBMol *, OBMol *, double, Mode mode = Training);
 };
 
 class AbrahamKernelB: public CKernel
 {
 public:
     AbrahamKernelB();
-    virtual double calculate(OBMol *, bool, OBMol *, double , bool norm = false);
+    virtual double calculate(OBMol *, OBMol *, double, Mode mode = Training);
 };
 
 class AbrahamKernelE: public CKernel
 {
 public:
     AbrahamKernelE();
-    virtual double calculate(OBMol *, bool, OBMol *, double , bool norm = false);
+    virtual double calculate(OBMol *, OBMol *, double, Mode mode = Training);
 };
 
 class AbrahamKernelS: public CKernel
 {
 public:
     AbrahamKernelS();
-    virtual double calculate(OBMol *, bool, OBMol *, double , bool norm = false);
+    virtual double calculate(OBMol *, OBMol *, double, Mode mode = Training);
 };
 
 

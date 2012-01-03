@@ -21,45 +21,27 @@
 
 #include "tanimoto.h"
 
-TanimotoKernel::TanimotoKernel(DescriptorFactory * descr) : CKernel( descr)
+TanimotoKernel::TanimotoKernel(DescriptorFactory * descr) : CKernel("Tanimoto", descr)
 {
-    name =  "Tanimoto";
-    m_remap = descr != NULL ? descr->needMapping() : false;
-    if(descr != NULL)
-        name += ":" + descr->getName();
+
 }
 
-TanimotoKernel::~TanimotoKernel()
+double TanimotoKernel::calculate(OBMol * mol1, OBMol * mol2, double, Mode regime)
 {
-}
+    const std::vector< double >  &m1 = m_descrfactory->getDescriptors(mol1, regime);
+    const std::vector< double >  &m2 = m_descrfactory->getDescriptors(mol2, Training);
 
-double TanimotoKernel::calculate(OBMol * mol1, bool regime, OBMol * mol2, double gamma, bool norm)
-{
-    if(m_remap)
+    const unsigned n = m1.size();
+
+    double p = 0.0, q=0, r =0;
+    unsigned int i;
+    for (i=0; i<n; i++)
     {
+        if (m1[i] >=0.5 && m2[i] >= 0.5) p++;
+        if (m1[i] <0.5 && m2[i]  >= 0.5) q++;
+        if (m1[i] >= 0.5 && m2[i] < 0.5) r++;
     }
-    else
-    {
-
-        const std::vector< struct Descriptor>  &m1 = m_descrfactory->getDescriptors(mol1, regime);
-        const std::vector< struct Descriptor>  &m2 = m_descrfactory->getDescriptors(mol2, true);
-
-        const unsigned n = m1.size();
-
-        double p = 0.0, q=0, r =0;
-        unsigned int i;
-        for (i=0; i<n; i++)
-        {
-            if (m1[i].value >=0.5 && m2[i].value >= 0.5) p++;
-            if (m1[i].value <0.5 && m2[i].value  >= 0.5) q++;
-            if (m1[i].value >= 0.5 && m2[i].value < 0.5) r++;
-        }
-        return p/ (p+q+r);
-
-
-    }
-
-    return 0;
+    return p/ (p+q+r);
 
 }
 

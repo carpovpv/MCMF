@@ -21,47 +21,25 @@
 #include "fp2s.h"
 #include <openbabel/plugin.h>
 
-FingerPrints2s::FingerPrints2s() : m_ndescr(1024)
+FingerPrints2s::FingerPrints2s() :
+    DescriptorFactory("FP2"),
+    m_ndescr(1024)
 {
     m_ob  = OBFingerprint::FindFingerprint("FP2");
-    if(m_ob == NULL)
-        printf("Problem in FP2\n");
-    name = "FP2";
     descrs.resize(m_ndescr);
 }
 
-FingerPrints2s::~FingerPrints2s()
+const std::vector < double > & FingerPrints2s::getDescriptors(OBMol * mol, Mode regime)
 {
-    m_descrs.clear();
-}
-
-bool FingerPrints2s::needMapping() const
-{
-    return false;
-}
-
-const std::vector < struct Descriptor > & FingerPrints2s::getDescriptors(OBMol * mol, bool regime)
-{
-
-    if(regime)
+    if(regime == Training)
     {
-        std::map < OBMol *, std::vector < struct Descriptor > >::iterator it;
+        std::map < OBMol *, std::vector < double > >::iterator it;
         it = m_descrs.find(mol);
 
         if(it != m_descrs.end())
         {
             return m_descrs[mol];
         }
-    }
-    else
-    {
-
-        std::string c = mol->GetData("prognosis")->GetValue();
-        long cur = atol(c.c_str());
-
-        if( prev == cur)
-            return descrs;
-        prev = cur;
     }
     //calc descrs...
 
@@ -77,11 +55,11 @@ const std::vector < struct Descriptor > & FingerPrints2s::getDescriptors(OBMol *
         unsigned int temp = fp[i];
         for (int j=0; j< (8 * sizeof(unsigned int )); ++j)
         {
-            descrs[N++].value = (temp & one) ? 1.0 : 0.0;
+            descrs[N++] = (temp & one) ? 1.0 : 0.0;
             temp = temp << 1  ;
         }
-    }        
-    if(regime)
+    }
+    if(regime == Training)
         m_descrs[mol] = descrs;
 
     return descrs;

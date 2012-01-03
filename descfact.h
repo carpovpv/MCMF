@@ -26,35 +26,46 @@
 #include <map>
 
 #include <openbabel/mol.h>
+#include <boost/utility.hpp>
 
 using namespace OpenBabel;
 
-struct Descriptor
-{
-    double value;
-    std::string name;
-};
+//Если используется Training, все значения дескрипторов, ядер и норм запоминаются в локальных
+//кэшах. Если Prediction, то они всегда вычисляются
+//В функциях прогноза, первая молекула -- всегда тестируемая, а вторая принадлежит классу
+//обучаемых структур.
 
-class DescriptorFactory
+enum Mode {Training, Prediction};
+
+class DescriptorFactory : boost::noncopyable
 {
 public:
-    DescriptorFactory();
+    DescriptorFactory(const std::string & name);
     virtual ~DescriptorFactory() ;
 
-    std::string getName() const ;
+    const std::string & getName() const ;
 
-    virtual const std::vector < struct Descriptor > & getDescriptors(OBMol *, bool) = 0;
-    virtual bool needMapping()  const ;
+    /// regime true -> training
+    virtual const std::vector < double > & getDescriptors(OBMol *, Mode regime) = 0;
+
+    virtual void save(FILE * fp) const;
+    virtual void load(FILE * fp);
 
 protected:
-    std::string name;
-    long prev;
-    std::vector< struct Descriptor> descrs;
+
+    //временный вектор для работы над текущей структурой
+    std::vector< double> descrs;
+
+    //кэш дескрипторов для обучения
+    std::map < OBMol * , std::vector< double > > m_descrs;
+
+    //названия дескрипторов. Во многих блоках не используется,
+    //
+    std::vector <std::string> descrnames;
 
 private:
-    DescriptorFactory (const DescriptorFactory &);
-    DescriptorFactory & operator=(const DescriptorFactory &);
 
+    std::string m_name;
 
 };
 

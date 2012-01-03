@@ -11,14 +11,10 @@ public:
 
     Spectrophores();
     ~Spectrophores();
-    bool needMapping() const;
-    const std::vector < struct Descriptor > & getDescriptors(OBMol *, bool);
+    const std::vector < double > & getDescriptors(OBMol *, Mode mode = Training);
 
 private:
     OpenBabel::OBSpectrophore s;
-
-    std::map < OBMol * , std::vector< struct Descriptor > > m_descrs;
-
 
 };
 

@@ -9,12 +9,10 @@ class StericKernelK: public CKernel
 {
 public:
     StericKernelK();
-    virtual ~StericKernelK();
-    virtual double calculate(OBMol *, bool, OBMol *, double,  bool norm = false );
+    virtual double calculate(OBMol *,  OBMol *, double, Mode mode = Training);
     double steric(int atom1, int atom2);
 
 private:
-    bool m_remap;
     /*!
     	map[i][j] -> i,j - atoms' numbers
     */

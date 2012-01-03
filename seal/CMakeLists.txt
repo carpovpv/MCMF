@@ -2,19 +2,10 @@
 cmake_minimum_required (VERSION 2.6)
 SET(CMAKE_BUILD_TYPE "Release")
 set (PROJECT 
-        seal)
-
-set (HEADERS 
-	seal.h
-	ks_seal.h
-        ../fields.h
-)
+        pseal)
 
 set (SOURCE
-	align.cpp
-	ks_seal.cpp
-	seal.cpp
-        ../fields.cpp
+	pseal.cpp
         )
 
 project (${PROJECT})
@@ -26,8 +17,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -D_REENTERANT")
 
 set(LIBS ${OPENBABEL2_LIBRARIES})
 
-add_executable ( ${PROJECT} ${HEADERS} ${SOURCE})
-target_link_libraries(seal ${LIBS} nlopt pthread)
+add_executable ( ${PROJECT} ${SOURCE})
+target_link_libraries(pseal ${LIBS} nlopt pthread)
 
-install (TARGETS seal DESTINATION ${CMAKE_BINARY_DIR}/bin)
+install (TARGETS pseal DESTINATION ${CMAKE_BINARY_DIR}/bin)
 

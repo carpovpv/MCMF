@@ -80,7 +80,7 @@ void SEAL::readStructures(std::istream *ifs, const std::vector<std::string> *pro
             for(int j=0; j< props->size(); ++j)
             {
                 if(!mol.HasData(props->at(j)))
-                        add = false;
+                    add = false;
                 else
                 {
                     if(mol.HasData(props->at(j)))
@@ -94,10 +94,11 @@ void SEAL::readStructures(std::istream *ifs, const std::vector<std::string> *pro
             }
         }
 
+
         if(add)
         {
-           mol.DeleteHydrogens();
-           mols.push_back(mol);
+            mol.DeleteHydrogens();
+            mols.push_back(mol);
         }
 
     }
@@ -112,16 +113,16 @@ void SEAL::go()
     align();
 
     if(first)
-    for(int i =0; i< m_mols.size(); ++i)
-    {
-        OBAtom *atom;
-        FOR_ATOMS_OF_MOL(atom, m_mols[i])
+        for(int i =0; i< m_mols.size(); ++i)
         {
-            Fields * ff = new Fields();
-            ff->calcValues(&*atom);
-            atom->SetData(ff);
+            OBAtom *atom;
+            FOR_ATOMS_OF_MOL(atom, m_mols[i])
+            {
+                Fields * ff = new Fields();
+                ff->calcValues(&*atom);
+                atom->SetData(ff);
+            }
         }
-    }
 }
 
 OBMol * SEAL::getMolecule(int p)

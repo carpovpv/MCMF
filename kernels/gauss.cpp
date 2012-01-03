@@ -20,41 +20,22 @@
 
 #include "gauss.h"
 
-GaussKernel::GaussKernel(DescriptorFactory * descr) : CKernel( descr)
+GaussKernel::GaussKernel(DescriptorFactory * descr) : CKernel("Gaussian", descr)
 {
-    name = "Gaussian";
-    m_remap = descr != NULL ? descr->needMapping() : false;
-    if(descr != NULL)
-        name += ":" + descr->getName();
+
 }
 
-GaussKernel::~GaussKernel()
+double GaussKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma, Mode regime)
 {
-}
+    const std::vector< double>  m1 = m_descrfactory->getDescriptors(mol1, regime);
+    const std::vector< double>  m2 = m_descrfactory->getDescriptors(mol2, Training);
 
-double GaussKernel::calculate(OBMol * mol1, bool regime, OBMol * mol2, double gamma, bool norm)
-{
-    if(m_remap)
-    {
-    }
-    else
-    {
+    double s = 0.0;
+    const unsigned n = m1.size();
 
-        const std::vector< struct Descriptor>  m1 = m_descrfactory->getDescriptors(mol1, regime);
-        const std::vector< struct Descriptor>  m2 = m_descrfactory->getDescriptors(mol2, true);
+    for(int i=0; i< n; ++i)
+        s+= pow((m1[i] - m2[i]), 2);
 
-        double s = 0.0;
-        const unsigned n = m1.size();
-
-        for(int i=0; i< n; ++i)
-            s+= pow((m1[i].value - m2[i].value), 2);
-
-        //printf("Gauss: %g %u %u\n", -s * gamma, mol1, mol2);
-        return exp(-s * gamma);
-
-    }
-
-    return 0;
-
+    return exp(-s * gamma);
 }
 

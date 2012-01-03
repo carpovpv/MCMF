@@ -22,10 +22,13 @@
 #define __KERNEL_H
 
 #include <openbabel/mol.h>
-#include "descfact.h"
+#include <boost/utility.hpp>
+
 #include <string>
 #include <math.h>
 #include <map>
+
+#include "descfact.h"
 
 /*!
   The abstract class for kernel representation. Simple kernels should
@@ -34,53 +37,34 @@
   for the molecule, then the Kernel computes the similarity.
 */
 
-#define COEFF  (sqrt((M_PI * M_PI * M_PI) / gamma / gamma / gamma))
+//norms for MCMF approach
+inline double COEFF(double gamma)
+{
+    return M_PI / gamma * sqrt( M_PI / gamma);
+}
 
-class CKernel
+class CKernel : boost::noncopyable
 {
 public:
 
-    CKernel( DescriptorFactory * descrfactory = NULL) :
-        m_descrfactory(descrfactory)
-    {
-        norms.clear();
-         prev = -1;
-    }    
 
-    virtual ~CKernel()
-    {
-
-    }
+    CKernel(const std::string & name, DescriptorFactory * descrfactory = NULL);
+    virtual ~CKernel();
 
     /*!
-      Returns the similarity between two molecules within the field.
+      Return the similarity between two molecules within the field.
     */
 
-    virtual double calculate(OBMol *, bool, OBMol *, double, bool norm = false ) = 0;
+    virtual double calculate(OBMol *, OBMol *, double, Mode mode = Training ) = 0;
 
-    /*!
-       Return the name of a kernel.
-    */
-    const char * getName() const {
-        return name.c_str();
-    }
+    const std::string & getName() const;
 
-    void clearNorms() {norms.clear();}
-
-    void setDescriptorFactory(DescriptorFactory *f) { m_descrfactory = f;}
+    void save(FILE * fp) const;
 
 protected:
 
-    std::string name;
-
+    std::string m_name;
     DescriptorFactory * m_descrfactory;
-
-    std::map < OBMol *, double> norms;
-
-    //prognosis
-    double curnorm; //for current molecule in the prognosis mode.
-    long prev;
-
 
 };
 

@@ -21,13 +21,12 @@
 #include "abraham.h"
 #include "../fields.h"
 
-AbrahamKernelA::AbrahamKernelA() : CKernel()
+AbrahamKernelA::AbrahamKernelA() : CKernel("AbrahamA")
 {
-    name = "AbrahamA";
 
 }
 
-double AbrahamKernelA::calculate(OBMol * mol1, bool regime, OBMol * mol2, double gamma, bool norm)
+double AbrahamKernelA::calculate(OBMol * mol1, OBMol * mol2, double gamma, Mode)
 {
     double  s = 0.0;
     double w1 = 0.0;
@@ -51,31 +50,16 @@ double AbrahamKernelA::calculate(OBMol * mol1, bool regime, OBMol * mol2, double
             s += w1 * w2 * exp ( -gamma/4.0 * ( x*x + y*y +z*z  ) );
         }
     }
-    if(norm)
-    {
 
-       if(norms.find(mol1) == norms.end())
-       {
-           norms[mol1] = calculate(mol1,regime, mol1, gamma, false);
-       }
-
-       if(norms.find(mol2) == norms.end())
-       {
-           norms[mol2] = calculate(mol2, regime, mol2, gamma, false);
-       }
-
-       s = s/ sqrt(norms[mol1] * norms[mol2]);
-    }
-    return COEFF * s;
+    return COEFF(gamma) * s;
 }
 
-AbrahamKernelB::AbrahamKernelB() : CKernel()
+AbrahamKernelB::AbrahamKernelB() : CKernel("AbrahamB")
 {
-    name = "AbrahamB";
 
 }
 
-double AbrahamKernelB::calculate(OBMol * mol1, bool regime, OBMol * mol2, double gamma, bool norm)
+double AbrahamKernelB::calculate(OBMol * mol1, OBMol * mol2, double gamma, Mode)
 {
     double  s = 0.0;
     double w1 = 0.0;
@@ -99,31 +83,15 @@ double AbrahamKernelB::calculate(OBMol * mol1, bool regime, OBMol * mol2, double
             s += w1 * w2 * exp ( -gamma/4.0 * ( x*x + y*y +z*z  ) );
         }
     }
-    if(norm)
-    {
 
-       if(norms.find(mol1) == norms.end())
-       {
-           norms[mol1] = calculate(mol1, regime, mol1, gamma, false);
-       }
-
-       if(norms.find(mol2) == norms.end())
-       {
-           norms[mol2] = calculate(mol2, regime, mol2, gamma, false);
-       }
-
-       s = s/ sqrt(norms[mol1] * norms[mol2]);
-    }
-    return COEFF * s;
+    return COEFF(gamma) * s;
 }
 
-AbrahamKernelE::AbrahamKernelE() : CKernel()
+AbrahamKernelE::AbrahamKernelE() : CKernel("AbrahamE")
 {
-    name = "AbrahamE";
-
 }
 
-double AbrahamKernelE::calculate(OBMol * mol1, bool regime, OBMol * mol2, double gamma, bool norm)
+double AbrahamKernelE::calculate(OBMol * mol1, OBMol * mol2, double gamma, Mode)
 {
     double  s = 0.0;
     double w1 = 0.0;
@@ -147,31 +115,16 @@ double AbrahamKernelE::calculate(OBMol * mol1, bool regime, OBMol * mol2, double
             s += w1 * w2 * exp ( -gamma/4.0 * ( x*x + y*y +z*z  ) );
         }
     }
-    if(norm)
-    {
 
-       if(norms.find(mol1) == norms.end())
-       {
-           norms[mol1] = calculate(mol1, regime, mol1, gamma, false);
-       }
-
-       if(norms.find(mol2) == norms.end())
-       {
-           norms[mol2] = calculate(mol2, regime, mol2, gamma, false);
-       }
-
-       s = s/ sqrt(norms[mol1] * norms[mol2]);
-    }
-    return COEFF * s;
+    return COEFF(gamma) * s;
 }
 
-AbrahamKernelS::AbrahamKernelS() : CKernel()
+AbrahamKernelS::AbrahamKernelS() : CKernel("AbrahamS")
 {
-    name = "AbrahamS";
 
 }
 
-double AbrahamKernelS::calculate(OBMol * mol1, bool regime, OBMol * mol2, double gamma, bool norm)
+double AbrahamKernelS::calculate(OBMol * mol1, OBMol * mol2, double gamma, Mode)
 {
     double  s = 0.0;
     double w1 = 0.0;
@@ -195,22 +148,7 @@ double AbrahamKernelS::calculate(OBMol * mol1, bool regime, OBMol * mol2, double
             s += w1 * w2 * exp ( -gamma/4.0 * ( x*x + y*y +z*z  ) );
         }
     }
-    if(norm)
-    {
-
-       if(norms.find(mol1) == norms.end())
-       {
-           norms[mol1] = calculate(mol1, regime, mol1, gamma, false);
-       }
-
-       if(norms.find(mol2) == norms.end())
-       {
-           norms[mol2] = calculate(mol2,regime, mol2, gamma, false);
-       }
-
-       s = s/ sqrt(norms[mol1] * norms[mol2]);
-    }
-    return COEFF * s;
+    return COEFF(gamma) * s;
 }
 
 

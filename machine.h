@@ -24,6 +24,7 @@
 #include <string>
 #include "seal/seal.h"
 #include <nlopt.h>
+#include "boost/utility.hpp"
 
 #define UNKNOWN_VALUE 666
 #define GNUPLOT "gnuplot -persist"
@@ -34,7 +35,7 @@ struct result
     double * y_pred;
 };
 
-class Machine
+class Machine : boost::noncopyable
 {
 public:
 
@@ -87,9 +88,6 @@ protected:
     void drop_result(struct result *);
 
 private:
-
-    Machine (const Machine &);
-    Machine & operator=(const Machine &);
 
     int m_CV;
 

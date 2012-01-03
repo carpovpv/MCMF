@@ -20,26 +20,33 @@
 
 #include "cmfa.h"
 
-CMFA::CMFA()
+double CMFA::calculate_n(OBMol *mol1, OBMol *mol2, Mode mode)
 {
-    m_norm = true;
+    double s = 0.0;
+    double hh = 0.0;
+
+    int i;
+
+    for(i=0; i< m_kernels.size() -1; ++i)
+    {
+        CKernel * kernel = m_kernels[i];
+        double p = kernel->calculate(mol1, mol2, m_h[i*2], mode);
+
+        s  += m_h[i*2 +1] * p;
+        hh += m_h[i*2+1];
+    }
+
+    CKernel * kernel = m_kernels[m_kernels.size() -1];
+    double p = kernel->calculate(mol1, mol2, m_h[i*2], mode);
+
+    s+= (1.0 - hh) * p;
+    return s;
 }
 
-CMFA::~CMFA()
-{
-
-}
-
-void CMFA::setNormalise(bool norm)
-{
-    m_norm = norm;
-
-}
-
-double CMFA::calculate(OBMol *mol1, bool regime, OBMol * mol2)
+double CMFA::calculate(OBMol *mol1, OBMol * mol2, Mode regime)
 {
     struct molkey mol;
-    if(regime)
+    if(regime == Training) //обучение - берем из кэша. Необходимо менять семантику функции.
     {
 
         if( reinterpret_cast<int *> (mol1) < reinterpret_cast<int *> (mol2) )
@@ -57,30 +64,44 @@ double CMFA::calculate(OBMol *mol1, bool regime, OBMol * mol2)
             return gramm[mol];
     }
 
-    double s = 0.0;
-    double hh = 0.0;
+    double s = calculate_n(mol1, mol2);
 
-    int i=0;
+    //need normalisation
 
-    for( ; i< m_kernels.size() -1; ++i)
+    if(regime == Training)
     {
-        CKernel * kernel = m_kernels[i];
-        double p = kernel->calculate(mol1, regime, mol2, m_h[i*2], m_norm);
+        std::map < OBMol *, double>::iterator it1 = norms.find(mol1);
+        std::map < OBMol *, double>::iterator it2 = norms.find(mol2);
 
-        s+= m_h[i*2 +1] * p;
-        hh+=m_h[i*2+1];
+        double s1, s2;
+        if(it1 == norms.end())
+        {
+            s1 = calculate_n(mol1, mol1);
+            norms[mol1] = s1;
+        }
+        else
+            s1 = norms[mol1];
+
+        if(it2 == norms.end())
+        {
+            s2 = calculate_n(mol2, mol2);
+            norms[mol2] = s2;
+        }
+        else
+            s2 = norms[mol2];
+        s /= sqrt(s1 * s2);
     }
+    else
+    {
+         double s1 = calculate_n(mol1, mol1);
+         double s2 = calculate_n(mol2, mol2);
 
-    CKernel * kernel = m_kernels[m_kernels.size() -1];
-    double p = kernel->calculate(mol1, regime, mol2, m_h[i*2], m_norm);
-    //printf("-Kernel: %g %d %g\n", s, gramm.size(), p);
-
-    s+= (1.0- hh) * p;
+         s /= sqrt(s1 * s2);
+    }
 
     if(regime)
         gramm[mol] = s;
 
-    //printf("Kernel: %g %d %g\n", s, gramm.size(), hh);
     return s;
 
 }
@@ -89,7 +110,7 @@ void CMFA::clearCache()
 {
     //printf("Gramm size: %d\n", gramm.size());
     gramm.clear();
-    clearNorms();
+    norms.clear();
 }
 
 void CMFA::setParameters(const double *h)
@@ -117,17 +138,28 @@ void CMFA::clear()
         m_kernels.erase( m_kernels.begin() + i);
 }
 
-const char * CMFA::getKernelName(int i)
-{
-    if(i >= m_kernels.size())
-        return NULL;
-    return m_kernels[i]->getName();
-}
-
-void CMFA::clearNorms()
+void CMFA::save(FILE *fp)
 {
     for(int i =0; i< m_kernels.size(); ++i)
-        m_kernels[i]->clearNorms();
+    {
+        CKernel * kernel = m_kernels[i];
+        kernel->save(fp);
+    }
+}
+
+void CMFA::load(FILE *fp)
+{
+
+}
+
+int CMFA::count() const
+{
+    return m_kernels.size();
+}
+
+const std::string & CMFA::getKernelName(int i) const
+{
+    return m_kernels[i]->getName();
 }
 
 void CMFA::delKernel(CKernel * kernel)
@@ -142,6 +174,6 @@ void CMFA::delKernel(CKernel * kernel)
 void CMFA::printSelKernels()
 {
     for(int i =0; i<m_kernels.size(); ++i)
-        printf("%s is loaded.\n", m_kernels[i]->getName());
+        printf("%s is loaded.\n", m_kernels[i]->getName().c_str());
 }
 

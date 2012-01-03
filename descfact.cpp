@@ -20,22 +20,32 @@
 
 #include "descfact.h"
 
-DescriptorFactory::DescriptorFactory()
+DescriptorFactory::DescriptorFactory(const std::string & name)
+    :m_name(name)
 {
-    prev = -1;
+
+}
+
+void DescriptorFactory::load(FILE *fp)
+{
+
+}
+
+void DescriptorFactory::save(FILE *fp) const
+{
+    fprintf(fp,"%s: %d\n", m_name.c_str(), descrnames.size() );
+    for(int i =0; i< descrnames.size(); ++i)
+        fprintf(fp, "%s ", descrnames[i].c_str());
+    fprintf(fp, "\n");
 }
 
 DescriptorFactory::~DescriptorFactory()
 {
+
 }
 
-bool  DescriptorFactory::needMapping() const
+const std::string & DescriptorFactory::getName() const
 {
-    return false;
-}
-
-std::string DescriptorFactory::getName() const
-{
-    return name;
+    return m_name;
 }
 

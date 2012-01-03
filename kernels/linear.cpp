@@ -1,22 +1,19 @@
 #include "linear.h"
 
-LinearKernel::LinearKernel(DescriptorFactory * descr) : CKernel( descr)
+LinearKernel::LinearKernel(DescriptorFactory * descr) : CKernel("Linear", descr)
 {
-    name = "Linear";
-    if(descr != NULL)
-        name += ":" + descr->getName();
 }
 
-double LinearKernel::calculate(OBMol * mol1, bool regime, OBMol * mol2, double gamma, bool norm)
+double LinearKernel::calculate(OBMol * mol1, OBMol * mol2, double, Mode regime)
 {
-    const std::vector< struct Descriptor>  m1 = m_descrfactory->getDescriptors(mol1, regime);
-    const std::vector< struct Descriptor>  m2 = m_descrfactory->getDescriptors(mol2, true);
+    const std::vector< double >  m1 = m_descrfactory->getDescriptors(mol1, regime);
+    const std::vector< double >  m2 = m_descrfactory->getDescriptors(mol2, Training);
 
     double s = 0.0;
     const unsigned n = m1.size();
 
     for(int i=0; i< n; ++i)
-        s+= m1[i].value * m2[i].value;
+        s+= m1[i] * m2[i];
 
     return s;
 }

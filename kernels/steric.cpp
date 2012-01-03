@@ -21,13 +21,12 @@
 #include "steric.h"
 #include "../fields.h"
 
-StericKernel::StericKernel() : CKernel()
+StericKernel::StericKernel() : CKernel("Steric")
 {
-    name = "Steric";
 
 }
 
-double StericKernel::calculate(OBMol * mol1, bool regime, OBMol * mol2, double gamma, bool norm)
+double StericKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma, Mode)
 {
 
     double  s = 0.0;
@@ -52,34 +51,7 @@ double StericKernel::calculate(OBMol * mol1, bool regime, OBMol * mol2, double g
             s += w1 * w2 * exp ( -gamma/4.0 * ( x*x + y*y +z*z  ) );
         }
     }
-    s *= COEFF;
-
-    if(norm)
-    {
-        if(norms.find(mol2) == norms.end())
-            norms[mol2] = calculate(mol2, regime, mol2, gamma, false);
-
-        if(regime)
-        {
-            if(norms.find(mol1) == norms.end())
-                norms[mol1] = calculate(mol1, regime, mol1, gamma, false);
-        }
-        else
-        {
-            std::string c = mol1->GetData("prognosis")->GetValue();
-            long cur = atol(c.c_str());
-
-            //printf("MolID=: %ld %ld\n", cur, prev);
-            if( prev == cur)
-                return s / sqrt(curnorm * norms[mol2]);
-
-            prev = cur;
-            curnorm  = calculate(mol1, regime, mol1, gamma, false);
-            return s / sqrt(curnorm * norms[mol2]);
-        }
-
-        s = s/ sqrt(norms[mol1] * norms[mol2]);
-    }
+    s *= COEFF(gamma);
     return s;
 }
 

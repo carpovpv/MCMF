@@ -20,9 +20,8 @@
 
 #include "hydrophov.h"
 
-HydrophobicKernelV::HydrophobicKernelV() : CKernel()
+HydrophobicKernelV::HydrophobicKernelV() : CKernel("HydrophobicV")
 {
-    name =  "HydrophobicV";
     /*
     @ARTICLE{hydropobicity,
       author = {Viswanadhan, V.N. and Ghose, A.K. and Revankar, G.R., and Robins,
@@ -489,18 +488,14 @@ int HydrophobicKernelV::get_hydrophobicity(OBAtom * a)
     }
     return 0;
 }
-HydrophobicKernelV::~HydrophobicKernelV()
-{
-}
 
-double HydrophobicKernelV::calculate(OBMol * mol1, bool regime, OBMol * mol2, double gamma, bool norm)
+double HydrophobicKernelV::calculate(OBMol * mol1, OBMol * mol2, double gamma, Mode)
 {
     double w1 = 0.0;
     double w2 = 0.0;
     double  s = 0.0;
 
     double w12 = 0.0;
-    double w22 = 0.0;
 
     FOR_ATOMS_OF_MOL(a, mol1)
     {
@@ -531,26 +526,7 @@ double HydrophobicKernelV::calculate(OBMol * mol1, bool regime, OBMol * mol2, do
             s += w1 * w2 * exp ( -gamma / 2 * ( pow((a->x() - b->x()), 2) + pow((a->y() - b->y()), 2)  + pow((a->z() - b->z()), 2)  ));
         }
     }
-    s *= COEFF;
-
-    if(norm)
-    {
-
-       if(norms.find(mol1) == norms.end())
-       {
-           norms[mol1] = calculate(mol1, regime, mol1, gamma, false);
-       }
-
-       if(norms.find(mol2) == norms.end())
-       {
-           norms[mol2] = calculate(mol2, regime, mol2, gamma, false);
-       }
-
-       s = s/ sqrt(norms[mol1] * norms[mol2]);
-
-    }
-
+    s *= COEFF(gamma);
     return s;
-
 }
 

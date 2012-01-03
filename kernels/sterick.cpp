@@ -20,9 +20,8 @@
 
 #include "sterick.h"
 
-StericKernelK::StericKernelK() : CKernel()
+StericKernelK::StericKernelK() : CKernel("StericK")
 {
-    name = "StericK";
 
     /*
     @ARTICLE{SKKGMS,
@@ -143,11 +142,7 @@ double StericKernelK::steric(int atom1, int atom2)
     return 0.0;
 }
 
-StericKernelK::~StericKernelK()
-{
-}
-
-double StericKernelK::calculate(OBMol * mol1,bool regime,OBMol * mol2, double gamma, bool norm)
+double StericKernelK::calculate(OBMol * mol1, OBMol * mol2, double gamma, Mode)
 {
     double s = 0.0;
     double w2 = 0.0;
@@ -167,25 +162,7 @@ double StericKernelK::calculate(OBMol * mol1,bool regime,OBMol * mol2, double ga
             s += w * exp ( -gamma/2 * ( x*x + y*y +z*z  ) );
         }
     }
-    s *= COEFF;
-
-    if(norm)
-    {
-
-       if(norms.find(mol1) == norms.end())
-       {
-           norms[mol1] = calculate(mol1, regime, mol1, gamma, false);
-       }
-
-       if(norms.find(mol2) == norms.end())
-       {
-           norms[mol2] = calculate(mol2, regime, mol2, gamma, false);
-       }
-
-       s = s/ sqrt(norms[mol1] * norms[mol2]);
-
-    }
-
+    s *= COEFF(gamma);
     return s;
 }
 

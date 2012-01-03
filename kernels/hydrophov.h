@@ -9,8 +9,7 @@ class HydrophobicKernelV: public CKernel
 {
 public:
     HydrophobicKernelV();
-    virtual ~HydrophobicKernelV();
-    virtual double calculate(OBMol *, bool, OBMol *, double, bool norm = false );
+    virtual double calculate(OBMol *, OBMol *, double, Mode mode = Training);
 private:
     std::map< int, double> hydrophobicity;
     std::map< OBAtom *, int >  cache;

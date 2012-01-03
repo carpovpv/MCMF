@@ -176,7 +176,7 @@ bool OneClassSVM::build(const double * params, const std::vector<int> &flags, co
             OBMol *mol1 = train->getMolecule(mask[i]);
             OBMol *mol2 = train->getMolecule(mask[j]);
 
-            double K = m_cmfa->calculate(mol1, true,  mol2);
+            double K = m_cmfa->calculate(mol1, mol2);
 
             problem.x[i_r][j_r+1].value = K;
             problem.x[j_r][i_r+1].value = K;
@@ -212,7 +212,7 @@ bool OneClassSVM::build(const double * params, const std::vector<int> &flags, co
             if(flags[j] == 0) continue;
 
             OBMol *mol2 = train->getMolecule(mask[j]);
-            double K = m_cmfa->calculate(mol1, true, mol2);
+            double K = m_cmfa->calculate(mol1, mol2);
 
             testing[i_p+1].value = K;
             testing[i_p+1].index = i_p+1;
@@ -272,8 +272,7 @@ bool OneClassSVM::save(const char * filename)
 
         fprintf(fp, "Kernels: %d\n", m_cmfa->count());
 
-        for(int i =0; i< m_cmfa->count(); ++i)
-            fprintf(fp, "%s\n", m_cmfa->getKernelName(i));
+        m_cmfa->save(fp);
 
         fprintf(fp, "Parameters: %d\n", m_NumParameters);
         for(int i=0; i< m_NumParameters; ++i)
@@ -302,8 +301,8 @@ bool OneClassSVM::save(const char * filename)
 
             problem.y[i_r] = 1.0;
 
-           // problem.x[i_r][i_r+1].value = 1.0;
-           // problem.x[i_r][i_r+1].index = i_r+1;
+            // problem.x[i_r][i_r+1].value = 1.0;
+            // problem.x[i_r][i_r+1].index = i_r+1;
 
             problem.x[i_r][0].value = i_r+1;
             problem.x[i_r][0].index = 0;
@@ -317,14 +316,14 @@ bool OneClassSVM::save(const char * filename)
                 OBMol *mol1 = train->getMolecule(i);
                 OBMol *mol2 = train->getMolecule(j);
 
-                double K = m_cmfa->calculate(mol1, true, mol2);
+                double K = m_cmfa->calculate(mol1, mol2);
 
 
                 problem.x[i_r][j_r+1].value = problem.x[j_r][i_r+1].value = K;
 
                 problem.x[i_r][j_r+1].index = j_r+1;
                 problem.x[j_r][i_r+1].index = i_r+1;
-                            j_r++;
+                j_r++;
 
             }
         }
@@ -396,6 +395,9 @@ double OneClassSVM::statistic()
 
     printf("max_r : %g\nmin_r : %g size: %d\n", max_r, min_r, results.size());
     if(max_r == -DBL_MAX || min_r == DBL_MAX)
+        return 0;
+
+    if(max_r == min_r )
         return 0;
 
     double step = (max_r - min_r ) / 10000.0;
@@ -480,7 +482,7 @@ double OneClassSVM::statistic()
     //fflush(gp);
 
     if(mode)
-    {              
+    {
 
         for(int i =0; i< auc.size(); i++)
             fprintf(fres, "%g %g\n", auc[i].fpr, auc[i].tpr );
@@ -587,8 +589,8 @@ void OneClassSVM::predict_decoys()
 
         problem.y[i_r] = 1.0;
 
-       // problem.x[i_r][i_r+1].value = 1.0;
-       // problem.x[i_r][i_r+1].index = i_r+1;
+        // problem.x[i_r][i_r+1].value = 1.0;
+        // problem.x[i_r][i_r+1].index = i_r+1;
 
         problem.x[i_r][0].value = i_r+1;
         problem.x[i_r][0].index = 0;
@@ -602,14 +604,14 @@ void OneClassSVM::predict_decoys()
             OBMol *mol1 = train->getMolecule(i);
             OBMol *mol2 = train->getMolecule(j);
 
-            double K = m_cmfa->calculate(mol1, true, mol2);
+            double K = m_cmfa->calculate(mol1, mol2);
 
 
             problem.x[i_r][j_r+1].value = problem.x[j_r][i_r+1].value = K;
 
             problem.x[i_r][j_r+1].index = j_r+1;
             problem.x[j_r][i_r+1].index = i_r+1;
-                        j_r++;
+            j_r++;
 
         }
     }
@@ -637,7 +639,7 @@ void OneClassSVM::predict_decoys()
         {
 
             OBMol *mol2 = train->getMolecule(j);
-            double K = m_cmfa->calculate(mol1, true, mol2);
+            double K = m_cmfa->calculate(mol1, mol2);
 
             testing[i_p+1].value = K;
             testing[i_p+1].index = i_p+1;
@@ -706,7 +708,7 @@ bool OneClassSVM::predict(OBMol * mol)
     {
 
         OBMol *mol2 = train->getMolecule(j);
-        double K = m_cmfa->calculate(mol, false, mol2);
+        double K = m_cmfa->calculate(mol, mol2, Prediction);
 
         //printf("K: %g\n", K);
 
@@ -727,40 +729,40 @@ bool OneClassSVM::predict(OBMol * mol)
     printf("%g\n", y);
 
 
-   /* if(y >= m_threshold)
-    {
-        printf("%s %d %g\n", mol->GetTitle(), y >= m_threshold ? 1 : 0 ,  y);
-        QString title(mol->GetTitle());
-        QSqlQuery query;
-        query.prepare("select zincode from zinc where zincode = ?");
-        query.addBindValue(title);
-        if(!query.exec())
-            std::cerr << query.lastError().databaseText().toAscii().data() << std::endl;
-        if(query.next())
-        {
-            query.clear();
-            query.prepare("update zinc set electrostatic = ? where zincode = ?");
-            query.addBindValue(y);
-            query.addBindValue(title);
-            query.exec();
-        }
-        else
-        {
-            //no such code
-            std::stringstream st;
+    /* if(y >= m_threshold)
+     {
+         printf("%s %d %g\n", mol->GetTitle(), y >= m_threshold ? 1 : 0 ,  y);
+         QString title(mol->GetTitle());
+         QSqlQuery query;
+         query.prepare("select zincode from zinc where zincode = ?");
+         query.addBindValue(title);
+         if(!query.exec())
+             std::cerr << query.lastError().databaseText().toAscii().data() << std::endl;
+         if(query.next())
+         {
+             query.clear();
+             query.prepare("update zinc set electrostatic = ? where zincode = ?");
+             query.addBindValue(y);
+             query.addBindValue(title);
+             query.exec();
+         }
+         else
+         {
+             //no such code
+             std::stringstream st;
 
-            OBConversion conv(NULL, &st);
-            conv.SetOutFormat("SDF");
-            conv.Write(mol);
+             OBConversion conv(NULL, &st);
+             conv.SetOutFormat("SDF");
+             conv.Write(mol);
 
-            query.clear();
-            query.prepare("insert into zinc(zincode, electrostatic, mol) values(?, ?, ?)");
-            query.addBindValue(title);
-            query.addBindValue(y);
-            query.addBindValue(st.str().c_str());
-            query.exec();
-        }
-    }*/
+             query.clear();
+             query.prepare("insert into zinc(zincode, electrostatic, mol) values(?, ?, ?)");
+             query.addBindValue(title);
+             query.addBindValue(y);
+             query.addBindValue(st.str().c_str());
+             query.exec();
+         }
+     }*/
 
 
     //m_cmfa->clearCache();

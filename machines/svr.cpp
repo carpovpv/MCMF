@@ -290,7 +290,7 @@ bool Svr::build(const double * params, const std::vector<int> &flags, const std:
             OBMol *mol1 = train->getMolecule(mask[i]);
             OBMol *mol2 = train->getMolecule(mask[j]);
 
-            double K = m_cmfa->calculate(mol1, true, mol2);
+            double K = m_cmfa->calculate(mol1, mol2);
 
             problem.x[i_r][j_r+1].value = K;
             problem.x[j_r][i_r+1].value = K;
@@ -326,14 +326,14 @@ bool Svr::build(const double * params, const std::vector<int> &flags, const std:
             if(flags[j] == 0) continue;
 
             OBMol *mol2 = train->getMolecule(mask[j]);
-            double K = m_cmfa->calculate(mol1, true, mol2);
+            double K = m_cmfa->calculate(mol1, mol2);
 
             testing[i_p+1].value = K;
             testing[i_p+1].index = i_p+1;
 
             i_p++;
 
-        }                
+        }
 
         struct result * res = create_result();
 
@@ -385,7 +385,7 @@ bool Svr::save(const char * filename)
         fprintf(fp, "Kernels: %d\n", m_cmfa->count());
 
         for(int i =0; i< m_cmfa->count(); ++i)
-            fprintf(fp, "%s\n", m_cmfa->getKernelName(i));
+            fprintf(fp, "%s\n", m_cmfa->getKernelName(i).c_str());
 
         fprintf(fp, "Parameters: %d\n", m_NumParameters);
         for(int i=0; i< m_NumParameters; ++i)
@@ -415,8 +415,8 @@ bool Svr::save(const char * filename)
 
             problem.y[i_r] = s_data[i][0];
 
-           // problem.x[i_r][i_r+1].value = 1.0;
-           // problem.x[i_r][i_r+1].index = i_r+1;
+            // problem.x[i_r][i_r+1].value = 1.0;
+            // problem.x[i_r][i_r+1].index = i_r+1;
 
             problem.x[i_r][0].value = i_r+1;
             problem.x[i_r][0].index = 0;
@@ -430,14 +430,14 @@ bool Svr::save(const char * filename)
                 OBMol *mol1 = train->getMolecule(i);
                 OBMol *mol2 = train->getMolecule(j);
 
-                double K = m_cmfa->calculate(mol1, true, mol2);
+                double K = m_cmfa->calculate(mol1, mol2);
 
 
                 problem.x[i_r][j_r+1].value = problem.x[j_r][i_r+1].value = K;
 
                 problem.x[i_r][j_r+1].index = j_r+1;
                 problem.x[j_r][i_r+1].index = i_r+1;
-                            j_r++;
+                j_r++;
 
             }
         }
@@ -486,15 +486,15 @@ double Svr::statistic()
 
     for(int i=0; i< n; ++i)
     {
-       double y = (m_data[i][0] - results[i]->y_pred[0]);
-       fprintf(fp,"%g %g\n", results[i]->y_real[0], results[i]->y_pred[0] );
-       PRESS += y*y;
+        double y = (m_data[i][0] - results[i]->y_pred[0]);
+        fprintf(fp,"%g %g\n", results[i]->y_real[0], results[i]->y_pred[0] );
+        PRESS += y*y;
 
-       xy += m_data[i][0] *  results[i]->y_pred[0];
-       xx += m_data[i][0];
-       yy += results[i]->y_pred[0];
-       x2 += m_data[i][0] * m_data[i][0];
-       y2 += results[i]->y_pred[0] *results[i]->y_pred[0];
+        xy += m_data[i][0] *  results[i]->y_pred[0];
+        xx += m_data[i][0];
+        yy += results[i]->y_pred[0];
+        x2 += m_data[i][0] * m_data[i][0];
+        y2 += results[i]->y_pred[0] *results[i]->y_pred[0];
 
     }
 

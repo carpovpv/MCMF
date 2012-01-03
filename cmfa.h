@@ -22,6 +22,7 @@
 #define __CMFA_H
 
 #include <openbabel/mol.h>
+#include <boost/utility.hpp>
 
 #include <vector>
 #include "kernel.h"
@@ -50,44 +51,38 @@ struct molkey
   Continuous Molecular Field Analysis.
 */
 
-class CMFA
+class CMFA :  boost::noncopyable
 {
 public:
-    CMFA();
-    virtual ~CMFA();
 
-    virtual double calculate(OBMol *, bool, OBMol *);
+    double calculate(OBMol *mol1, OBMol *mol2, Mode mode = Training);
 
     void addKernel(CKernel *);
     void delKernel(CKernel *);
+
+    virtual void save(FILE *fp);
+    virtual void load(FILE * fp);
+
     void clear();
     void clearCache();
 
     void setParameters(const double * h);
-    int count() {
-        return m_kernels.size();
-    }
-
-    void setNormalise(bool norm=true);
+    int count() const;
 
     void printSelKernels();
-    const char * getKernelName(int i);
-
-    void clearNorms();
-
-private:
+    const std::string & getKernelName(int i) const;
 
     std::vector< CKernel * > m_kernels;
 
-    const double * m_h;
-    bool m_norm;
+private:
 
+    const double * m_h;
 
     std::map < struct molkey, double > gramm;
 
-    CMFA (const CMFA &);
-    CMFA & operator=(const CMFA &);
-
+    //Kernel norms
+    std::map < OBMol *, double> norms;
+    double calculate_n(OBMol *mol1, OBMol *mol2, Mode mode = Training);
 };
 
 #endif

@@ -28,26 +28,29 @@
 #include <sstream>
 
 #include "seal/seal.h"
-#include "seal/ks_seal.h"
-
 #include "fields.h"
 
 #include "cmfa.h"
 #include "kernels/gauss.h"
 #include "kernels/tanimoto.h"
-#include "descfact.h"
 #include "kernels/electro.h"
-#include "descrs/fp2s.h"
-#include "descrs/spectrophores.h"
 #include "kernels/hydropho.h"
 #include "kernels/steric.h"
 #include "kernels/linear.h"
 #include "kernels/hydrophov.h"
 #include "kernels/sterick.h"
 #include "kernels/abraham.h"
+
+#include "descfact.h"
+#include "descrs/fp2s.h"
+#include "descrs/spectrophores.h"
+#include "descrs/mnadescr.h"
+
 #include "machine.h"
 #include "machines/oneclasssvm.h"
 #include "machines/svr.h"
+
+#include "parser.h"
 
 #include <errno.h>
 #include <boost/shared_ptr.hpp>
@@ -57,24 +60,29 @@ const int MAX_PARAMS = 20;
 
 void help()
 {
-    printf("The progrma for building models for virtual screening \n"
+    printf("The program for building models for virtual screening \n"
            "based on continuous molecular field analysis (MCMF). \n");
 }
 
 int main(int argc, char ** argv)
 {
 
+    parse_command_line("");
+
+    std::cout << cond.machine  << std::endl;
+
     srand(time(NULL));
 
-    SEAL * train = NULL, * test = NULL;
-    FILE *fres = NULL;
+    SEAL * train = NULL;
+    SEAL * test = NULL;
 
-    char * sdf_test = NULL;
-    char * sdf_train = NULL; //decoys and ligands
+    FILE * fres = NULL;
+
+    char * sdf_test = NULL;  //decoys
+    char * sdf_train = NULL; //ligands
 
     int do_help = 0;
     int do_prognosis = 0;
-    int do_norm = 1;
     int max_iter = 3;
     int cv = 10;
 
@@ -94,7 +102,6 @@ int main(int argc, char ** argv)
         {"machine", required_argument, NULL, 'a'},
         {"property", optional_argument, NULL, 'p'},
         {"prognosis", optional_argument, & do_prognosis, 1},
-        {"norm", optional_argument, & do_norm, 1},
         {"max-iter", optional_argument, NULL, 'i'},
         {"cv", optional_argument, NULL, 'c'},
         {0, 0, 0, 0}
@@ -107,6 +114,7 @@ int main(int argc, char ** argv)
     //default descriptor block
     boost::shared_ptr<FingerPrints2s> fp2s( new FingerPrints2s());
     boost::shared_ptr<Spectrophores> Spectr( new Spectrophores());
+    boost::shared_ptr<MnaDescr> mna( new MnaDescr());
 
     boost::shared_ptr<CMFA> cmfa (new CMFA());
 
@@ -123,7 +131,7 @@ int main(int argc, char ** argv)
     boost::shared_ptr<AbrahamKernelE> abrahame (new AbrahamKernelE());
     boost::shared_ptr<AbrahamKernelS> abrahams (new AbrahamKernelS());
 
-    boost::shared_ptr<GaussKernel> gauss( new GaussKernel(fp2s.get()));
+    boost::shared_ptr<GaussKernel> gauss( new GaussKernel(mna.get()));
     boost::shared_ptr<GaussKernel> gaussSpect( new GaussKernel(Spectr.get()));
     boost::shared_ptr<TanimotoKernel > tanimoto (new TanimotoKernel(fp2s.get()));
 
@@ -133,8 +141,10 @@ int main(int argc, char ** argv)
     for(int i =0; i< MAX_PARAMS; ++i)
         usep[i] = UNKNOWN_VALUE;
 
+
+    ////start old parsing
     int c;
-    while( (c = getopt_long(argc, argv, "a:t:v:m:r:k:p:h", longopts, NULL)) != -1)
+    while( (c = getopt_long(argc, argv, "", longopts, NULL)) != -1)
     {
         double k;
         char *p, *s;
@@ -159,7 +169,7 @@ int main(int argc, char ** argv)
                 prop[i]='\0';
                 props.push_back(prop);
 
-            }while(*p++!='\0');
+            } while(*p++!='\0');
 
             printf("Properties:\n");
             for(i=0; i< props.size(); ++i)
@@ -307,6 +317,9 @@ int main(int argc, char ** argv)
         }
     }
 
+
+    ///// end parsing command line
+
     if(do_help)
     {
         help();
@@ -327,7 +340,7 @@ int main(int argc, char ** argv)
         do
         {
             fgets(str, 255, fp);
-        }while(str[0] == '#');
+        } while(str[0] == '#');
 
         std::stringstream sin;
 
@@ -348,7 +361,7 @@ int main(int argc, char ** argv)
                 fgets(str, 255, fp);
                 buf += str;
             } while(strncmp("$$$$", str, 4));
-        }       
+        }
 
         sin.str(buf);
         obconversion.SetInStream(&sin);
@@ -438,7 +451,7 @@ int main(int argc, char ** argv)
             return 1;
         }
 
-        for(int i=0;i< N; ++i)
+        for(int i=0; i< N; ++i)
         {
             fscanf(fp, "%lf", &usep[i]);
         }
@@ -488,44 +501,26 @@ int main(int argc, char ** argv)
 
         //model read
 
-         std::ifstream ifs(sdf_test);
+        std::ifstream ifs(sdf_test);
 
-         obconversion.SetInFormat("SDF");
-         obconversion.SetInStream(&ifs);
+        obconversion.SetInFormat("SDF");
+        obconversion.SetInStream(&ifs);
 
-         OBMol mol;
+        OBMol mol;
 
-         long struc = 0;
-         while(obconversion.Read(&mol))
-         {
-             mol.DeleteHydrogens();
+        while(obconversion.Read(&mol))
+        {
 
-             char st[100];
-             sprintf(st, "%ld", struc);
+            OBAtom *atom;
+            FOR_ATOMS_OF_MOL(atom, mol)
+            {
+                Fields * ff = new Fields();
+                ff->calcValues(&*atom);
+                atom->SetData(ff);
+            }
 
-             OBPairData  * data = new OBPairData();
-
-             data->SetAttribute("prognosis");
-             data->SetValue(st);
-             data->SetOrigin(userInput);
-
-             mol.SetData(data);
-
-             OBAtom *atom;
-             FOR_ATOMS_OF_MOL(atom, mol)
-             {
-                 Fields * ff = new Fields();
-                 ff->calcValues(&*atom);
-                 atom->SetData(ff);
-             }
-
-             machine->predict(&mol);
-
-             struc++;
-             //fprintf(stderr,"%d\n", struc);
-         }
-
-
+            machine->predict(&mol);            
+        }
 
         return 0;
     }
@@ -593,7 +588,6 @@ int main(int argc, char ** argv)
     machine->init();
 
     machine->setParameters(usep);
-    cmfa->setNormalise(do_norm);
 
     //machine->create();
     machine->create_random(max_iter);

@@ -32,14 +32,11 @@ class FingerPrints2s : public DescriptorFactory
 public:
 
     FingerPrints2s();
-    ~FingerPrints2s();
-    bool needMapping() const;
-    const std::vector < struct Descriptor > & getDescriptors(OBMol *, bool);
+
+    const std::vector < double > & getDescriptors(OBMol *, Mode mode = Training);
 
 private:
-
-    std::map < OBMol * , std::vector< struct Descriptor > > m_descrs;
-    const unsigned int m_ndescr;
+    const int m_ndescr;
     OBFingerprint * m_ob;
 };
 

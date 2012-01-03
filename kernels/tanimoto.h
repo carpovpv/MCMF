@@ -27,10 +27,7 @@ class TanimotoKernel: public CKernel
 {
 public:
     TanimotoKernel(DescriptorFactory *);
-    virtual ~TanimotoKernel();
-    virtual double calculate(OBMol *, bool, OBMol *, double , bool norm = false);
-private:
-    bool m_remap;
+    virtual double calculate(OBMol *, OBMol *, double, Mode mode = Training);
 };
 
 #endif

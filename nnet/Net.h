@@ -92,7 +92,7 @@ public:
     // Creates a new net layer with the given number of units,
     // and the given immediately-preceding layer (0 for none).
     NetLayer(int initUnits, NetLayer* prevLayer);
-    
+
     // Loads this layer from a stream where it was previous saved with save()
     NetLayer(std::istream& in, NetLayer* initPrevLayer);
     NetLayer(FILE *fp, NetLayer* initPrevLayer);
@@ -116,15 +116,15 @@ public:
     void clearWeights();
 
     // Saves weights for later restoring by restoreWeights. Only one
-    // set of weights can be saved, usually the best seen so far.    
+    // set of weights can be saved, usually the best seen so far.
     void saveWeights();
 
     // Restores the set of weights most recently saved by saveWeights.
     void restoreWeights();
-    
+
     // Propagates outputs of the previous layer to the outputs of this layer
     void propagate(real gain);
-    void propagate_prognosis(real gain); 
+    void propagate_prognosis(real gain);
 
     // Propagates error from this layer back to the previous layer,
     // in preparation for adjustWeights, which uses the error info.
@@ -157,12 +157,12 @@ private:
     real& getWeight(int unitNum, int weightNum);
     // Gets the delta-weight on the weightnum'th edge coming into unit unitNum
     real& getDWeight(int unitNum, int weightNum);
-    
-   public:
+
+public:
     real*   error;          // error term of ith unit
     int     units;          // number of units in this layer
-   
-   private:
+
+private:
     int     weightsPerUnit; // number of conns going into each unit
     real*   output;         // output of ith unit
     real*   weight;         // connection weights to ith unit
@@ -240,7 +240,7 @@ public:
     // should each be enumerated once on average per numOfExamples
     // calls.
     virtual void getExample(int inputSize, real* input,
-			    int outputSize, real* output) = 0;
+                            int outputSize, real* output) = 0;
 
     // Returns number of training examples. If randomly generated,
     // pick something large but reasonable.
@@ -255,8 +255,8 @@ public:
     // layers with the specified number of nodes in each, and the learning
     // rate, momentum factor, and gain of the sigmoid function.
     Net(int layers, int layerSizes[],
-	real momentumFactor, real learningRate, real gain,
-	int max_plain_cycles);
+        real momentumFactor, real learningRate, real gain,
+        int max_plain_cycles);
 
     // Loads a network from a stream where it was previous saved with save()
     Net(std::istream& in);
@@ -280,13 +280,13 @@ public:
     // - cutOffError establishes how much worse, as a multiple, error has
     //   to be than the minimum error seen before we stop training. Must be >1.
     real autotrain(ExampleFactory &trainingExamples,
-		   ExampleFactory &testExamples,
-		   int epochsBetweenTests = 10,
-		   float cutOffError = 1.1);
+                   ExampleFactory &testExamples,
+                   int epochsBetweenTests = 10,
+                   float cutOffError = 1.1);
 
     real autotrain_occ(ExampleFactory &trainingExamples,
-		   int epochsBetweenTests = 10,
-		   float cutOffError = 1.1);
+                       int epochsBetweenTests = 10,
+                       float cutOffError = 1.1);
 
     // Runs the network on an input and feeds it forward to produce an
     // output. For usage after training with autotrain.
@@ -310,7 +310,7 @@ private:
 
     void _backpropagate_sens();
     void _simpleTrain_sens(real*,real*);
- 
+
 
     // Restores the set of weights most recently saved by saveWeights.
     void restoreWeights();
@@ -359,7 +359,7 @@ private:
     real*         actualOutput;
     int max_plain_cycles;
 };
-    
+
 }
 
 #endif /* #ifndef _NET_H_ */

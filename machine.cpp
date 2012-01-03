@@ -164,32 +164,32 @@ Machine::~Machine()
 double Machine::create(nlopt_algorithm algo)
 {
     //grid search
-/*
-    FILE * fp = fopen("grid.search", "w");
+    /*
+        FILE * fp = fopen("grid.search", "w");
 
-    for(double nu = 0.001; nu < 0.8; nu += 0.05)
-      for(double c = 1e-5; c< 10; c*=10)
-    {
-        for(double g = 0.0001; g < 10; g+=10)
+        for(double nu = 0.001; nu < 0.8; nu += 0.05)
+          for(double c = 1e-5; c< 10; c*=10)
         {
+            for(double g = 0.0001; g < 10; g+=10)
+            {
 
-            Parameters[0] = nu;
-            Parameters[1] = c;
-            Parameters[2] = g;
+                Parameters[0] = nu;
+                Parameters[1] = c;
+                Parameters[2] = g;
 
-            double q = optim(0, Parameters, NULL, this);
+                double q = optim(0, Parameters, NULL, this);
 
-            fprintf(fp, "%g %g %g %g\n", nu,c , g, q);
-            fflush(fp);
+                fprintf(fp, "%g %g %g %g\n", nu,c , g, q);
+                fflush(fp);
+
+            }
+
 
         }
+        fclose(fp);
 
-
-    }
-    fclose(fp);
-
-    return true;
-*/
+        return true;
+    */
 
     nlopt_opt opt = nlopt_create(algo, m_NumParameters);
     nlopt_set_max_objective(opt, optim, this);
@@ -240,52 +240,52 @@ double Machine::create_random(int max_iter)
 
 
 
-      double *best_params = (double *) calloc(m_NumParameters,sizeof(double));
-      double best_rmse = -RAND_MAX;
+    double *best_params = (double *) calloc(m_NumParameters,sizeof(double));
+    double best_rmse = -RAND_MAX;
 
-      for(int i=0; i< m_NumParameters; ++i)
-          best_params[i] = Parameters[i];
+    for(int i=0; i< m_NumParameters; ++i)
+        best_params[i] = Parameters[i];
 
-      int iter = 0;
+    int iter = 0;
 
-      while(iter++<max_iter)
-      {
-           srand(time(NULL));
+    while(iter++<max_iter)
+    {
+        srand(time(NULL));
 
-           //double temp = create();
-           double temp = optim(0, Parameters,NULL, this);
+        //double temp = create();
+        double temp = optim(0, Parameters,NULL, this);
 
-           if(temp > best_rmse)
-           {
-               for(int i=0; i< m_NumParameters; ++i)
-                   best_params[i] = Parameters[i];
-               best_rmse = temp;
-           }
+        if(temp > best_rmse)
+        {
+            for(int i=0; i< m_NumParameters; ++i)
+                best_params[i] = Parameters[i];
+            best_rmse = temp;
+        }
 
 
-           for(int i=0; i< m_NumParameters; ++i)
-               Parameters[i] = lp[i] + (mp[i] - lp[i] - 0.1) / (1.00 * RAND_MAX) * rand();
+        for(int i=0; i< m_NumParameters; ++i)
+            Parameters[i] = lp[i] + (mp[i] - lp[i] - 0.1) / (1.00 * RAND_MAX) * rand();
 
-      }
+    }
 
-      for(int i =0; i< m_NumParameters; ++i)
-          Parameters[i] = best_params[i];
+    for(int i =0; i< m_NumParameters; ++i)
+        Parameters[i] = best_params[i];
 
-      double temp = create();
+    double temp = create();
 
-      if(temp > best_rmse)
-      {
+    if(temp > best_rmse)
+    {
         best_rmse = temp;
         for(int i=0; i< m_NumParameters; ++i)
             best_params[i] = Parameters[i];
-      }
+    }
 
-      printf("Final:\n");
-      printf("found maximum at f(" );
-      for(int i =0; i< m_NumParameters; ++i)
-          printf(" %g ", best_params[i]);
-      printf (") = %g\n", best_rmse);
+    printf("Final:\n");
+    printf("found maximum at f(" );
+    for(int i =0; i< m_NumParameters; ++i)
+        printf(" %g ", best_params[i]);
+    printf (") = %g\n", best_rmse);
 
-      free(best_params);
+    free(best_params);
 
 }

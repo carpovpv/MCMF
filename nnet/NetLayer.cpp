@@ -52,32 +52,32 @@ static const float BIAS = 1.0f;
 static real RandomEqualReal(real Low, real High)
 {
     return ((real) rand() / RAND_MAX) * (High-Low) + Low;
-}      
+}
 
 // Creates a new net layer with the given number of units,
 // and the given immediately-preceding layer (0 for none).
 NetLayer::NetLayer(const int initUnits,
-		   NetLayer* initPrevLayer)
+                   NetLayer* initPrevLayer)
     : units(initUnits), prevLayer(initPrevLayer)
 {
-	output = new real[units+1];
+    output = new real[units+1];
     error  = new real[units+1];
 
     if (prevLayer)
     {
-	weightsPerUnit = prevLayer->getUnits()+1;
+        weightsPerUnit = prevLayer->getUnits()+1;
 
-	int weightArraySize = (units+1)*weightsPerUnit;
-	weight     = new real[weightArraySize];
-	weightSave = new real[weightArraySize];
-	dWeight    = new real[weightArraySize];
+        int weightArraySize = (units+1)*weightsPerUnit;
+        weight     = new real[weightArraySize];
+        weightSave = new real[weightArraySize];
+        dWeight    = new real[weightArraySize];
     }
     else
     {
-	weightsPerUnit = 0;
-	weight = 0;
-	weightSave = 0;
-	dWeight = 0;
+        weightsPerUnit = 0;
+        weight = 0;
+        weightSave = 0;
+        dWeight = 0;
     }
 
     weightIntermediate = new real[weightsPerUnit+1];
@@ -96,21 +96,21 @@ NetLayer::NetLayer(std::istream& in, NetLayer* initPrevLayer)
 
     if (prevLayer)
     {
-	weightsPerUnit = prevLayer->getUnits()+1;
+        weightsPerUnit = prevLayer->getUnits()+1;
 
-	int weightArraySize = (units+1)*weightsPerUnit;
-	weight     = new real[weightArraySize];
-	weightSave = new real[weightArraySize];
-	dWeight    = new real[weightArraySize];
-	clearWeights();
-	readRawArray(in, weight, weightArraySize);
+        int weightArraySize = (units+1)*weightsPerUnit;
+        weight     = new real[weightArraySize];
+        weightSave = new real[weightArraySize];
+        dWeight    = new real[weightArraySize];
+        clearWeights();
+        readRawArray(in, weight, weightArraySize);
     }
     else
     {
-	weightsPerUnit = 0;
-	weight = 0;
-	weightSave = 0;
-	dWeight = 0;
+        weightsPerUnit = 0;
+        weight = 0;
+        weightSave = 0;
+        dWeight = 0;
     }
 
     weightIntermediate = new real[weightsPerUnit+1];
@@ -128,22 +128,22 @@ NetLayer::NetLayer(FILE *fp, NetLayer* initPrevLayer)
 
     if (prevLayer)
     {
-	weightsPerUnit = prevLayer->getUnits()+1;
+        weightsPerUnit = prevLayer->getUnits()+1;
 
-	int weightArraySize = (units+1)*weightsPerUnit;
-	weight     = new real[weightArraySize];
-	weightSave = new real[weightArraySize];
-	dWeight    = new real[weightArraySize];
-	clearWeights();
-	for(int i =0;i<weightArraySize;++i)
-	fscanf(fp,"%lf",&weight[i]);
+        int weightArraySize = (units+1)*weightsPerUnit;
+        weight     = new real[weightArraySize];
+        weightSave = new real[weightArraySize];
+        dWeight    = new real[weightArraySize];
+        clearWeights();
+        for(int i =0; i<weightArraySize; ++i)
+            fscanf(fp,"%lf",&weight[i]);
     }
     else
     {
-	weightsPerUnit = 0;
-	weight = 0;
-	weightSave = 0;
-	dWeight = 0;
+        weightsPerUnit = 0;
+        weight = 0;
+        weightSave = 0;
+        dWeight = 0;
     }
 
     weightIntermediate = new real[weightsPerUnit+1];
@@ -159,7 +159,7 @@ void NetLayer::save(std::ostream& out)
 
     if (prevLayer)
     {
-	writeRawArray(out, weight, (units+1)*weightsPerUnit);
+        writeRawArray(out, weight, (units+1)*weightsPerUnit);
     }
 }
 void NetLayer::save2()
@@ -168,9 +168,9 @@ void NetLayer::save2()
 
     if (prevLayer)
     {
-	for(int i=0;i< (units+1)*weightsPerUnit; i++)
-		std::cout <<  weight[i] << " ";
-	std::cout << std::endl;
+        for(int i=0; i< (units+1)*weightsPerUnit; i++)
+            std::cout <<  weight[i] << " ";
+        std::cout << std::endl;
     }
 
 }
@@ -184,9 +184,9 @@ NetLayer::~NetLayer()
 
     if (weight)
     {
-	delete[] weight;
-	delete[] weightSave;
-	delete[] dWeight;
+        delete[] weight;
+        delete[] weightSave;
+        delete[] dWeight;
     }
 
     delete [] weightIntermediate;
@@ -197,8 +197,8 @@ void NetLayer::randomizeWeights()
 {
     for (int i=0; i < (units+1)*weightsPerUnit; i++)
     {
-	weight[i]  = RandomEqualReal(-0.5, 0.5);
-	dWeight[i] = 0;
+        weight[i]  = RandomEqualReal(-0.5, 0.5);
+        dWeight[i] = 0;
     }
 }
 
@@ -207,8 +207,8 @@ void NetLayer::clearWeights()
 {
     for (int i=0; i < (units+1)*weightsPerUnit; i++)
     {
-	weight[i]  = 0;
-	dWeight[i] = 0;
+        weight[i]  = 0;
+        dWeight[i] = 0;
     }
 }
 
@@ -219,12 +219,12 @@ void NetLayer::propagate(real gain)
 
     for (int unitNum=1; unitNum <= units; unitNum++)
     {
-	real sum = 0;
-	for (int outputNum=0; outputNum < weightsPerUnit; outputNum++) {
-	    sum += *currentWeight * prevLayer->getOutput(outputNum);
-	    currentWeight++;
-	}
-	output[unitNum] = 1 / (1 + exp(-gain * sum));
+        real sum = 0;
+        for (int outputNum=0; outputNum < weightsPerUnit; outputNum++) {
+            sum += *currentWeight * prevLayer->getOutput(outputNum);
+            currentWeight++;
+        }
+        output[unitNum] = 1 / (1 + exp(-gain * sum));
     }
 }
 
@@ -234,16 +234,16 @@ void NetLayer::propagate_prognosis(real gain)
 
     for (int unitNum=1; unitNum <= units; unitNum++)
     {
-	real sum = 0;
-        for (int outputNum=0; outputNum < weightsPerUnit; outputNum++) 
-	{
-	    if(prevLayer->getOutput(outputNum)!=UNDEFINED) 
-	    {
-		sum += *currentWeight * prevLayer->getOutput(outputNum);
-	        currentWeight++;
-	    }
-	}
-	output[unitNum] = 1 / (1 + exp(-gain * sum));
+        real sum = 0;
+        for (int outputNum=0; outputNum < weightsPerUnit; outputNum++)
+        {
+            if(prevLayer->getOutput(outputNum)!=UNDEFINED)
+            {
+                sum += *currentWeight * prevLayer->getOutput(outputNum);
+                currentWeight++;
+            }
+        }
+        output[unitNum] = 1 / (1 + exp(-gain * sum));
     }
 }
 
@@ -252,16 +252,16 @@ void NetLayer::propagate_prognosis(real gain)
 // in preparation for adjustWeights, which uses the error info.
 void NetLayer::backpropagate(real gain)
 {
-    
+
     int prevUnits = prevLayer->getUnits();
 
     for (int prevUnitNum=prevUnits; prevUnitNum != 0; prevUnitNum--) {
-	real out = prevLayer->getOutput(prevUnitNum);
-	real err = 0;
-	for (int unitNum=1; unitNum <= units; unitNum++) {
-	    err += getWeight(unitNum, prevUnitNum) * error[unitNum];
-	}
-	prevLayer->setError(prevUnitNum, gain * out * (1-out) * err);
+        real out = prevLayer->getOutput(prevUnitNum);
+        real err = 0;
+        for (int unitNum=1; unitNum <= units; unitNum++) {
+            err += getWeight(unitNum, prevUnitNum) * error[unitNum];
+        }
+        prevLayer->setError(prevUnitNum, gain * out * (1-out) * err);
     }
 }
 
@@ -272,23 +272,23 @@ real NetLayer::computeError(real gain, real target[])
 {
     real out, err;
     real totalError = 0;
-   
+
     real* currentTarget = target + 0;
     real* currentOutput = output + 1;
     real* currentError  = error  + 1;
 
-    for(int unitNum=units; unitNum != 0; unitNum--) 
+    for(int unitNum=units; unitNum != 0; unitNum--)
     {
-	out = *currentOutput;
-	
-	if(*currentTarget == UNKNOWN_VALUE) err = 0.0;
-	else err = *currentTarget - out;
-	
-	*currentError = gain * out * (1-out) * err;
-	totalError += err*err;
-	currentOutput++;
-	currentTarget++;
-	currentError++;
+        out = *currentOutput;
+
+        if(*currentTarget == UNKNOWN_VALUE) err = 0.0;
+        else err = *currentTarget - out;
+
+        *currentError = gain * out * (1-out) * err;
+        totalError += err*err;
+        currentOutput++;
+        currentTarget++;
+        currentError++;
     }
 
     return 0.5*totalError;
@@ -302,20 +302,20 @@ void NetLayer::adjustWeights(real momentum, real learningRate)
 
     real* currentWeight  = &getWeight (units,prevLayer->getUnits());
     real* currentDWeight = &getDWeight (units,prevLayer->getUnits());
-    
+
     for (int prevUnitNum=0; prevUnitNum < weightsPerUnit; prevUnitNum++) {
-	weightIntermediate[prevUnitNum+1] = learningRate * prevLayer->getOutput(prevUnitNum);
+        weightIntermediate[prevUnitNum+1] = learningRate * prevLayer->getOutput(prevUnitNum);
     }
 
     for (int unitNum=units; unitNum != 0; unitNum--) {
-	for (int prevUnitNum=localWeightsPerUnit; prevUnitNum != 0; prevUnitNum--) {
-	    real newDeltaWeight = weightIntermediate[prevUnitNum] * error[unitNum];
-	    real oldDeltaWeight = *currentDWeight;
-	    *currentDWeight  = newDeltaWeight;
-	    *currentWeight  += newDeltaWeight + momentum*oldDeltaWeight;
-	    currentDWeight--;
-	    currentWeight--;
-	}
+        for (int prevUnitNum=localWeightsPerUnit; prevUnitNum != 0; prevUnitNum--) {
+            real newDeltaWeight = weightIntermediate[prevUnitNum] * error[unitNum];
+            real oldDeltaWeight = *currentDWeight;
+            *currentDWeight  = newDeltaWeight;
+            *currentWeight  += newDeltaWeight + momentum*oldDeltaWeight;
+            currentDWeight--;
+            currentWeight--;
+        }
     }
 }
 

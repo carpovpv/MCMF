@@ -1,6 +1,6 @@
 
 /*
- * gauss.h
+ * mnadescr.h
  * Copyright (C) Carpov Pavel   2010 <carpovpv@qsar.chem.msu.ru>
                  Baskin Igor I. 2010 <igbaskin@gmail.com>
  *
@@ -18,17 +18,19 @@
  * with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __GAUSS_H
-#define __GAUSS_H
+#ifndef MNADESR_H
+#define MNADESR_H
 
-#include "../kernel.h"
+#include "../descfact.h"
 
-class GaussKernel: public CKernel
+using namespace OpenBabel;
+
+class MnaDescr : public DescriptorFactory
 {
 public:
-    GaussKernel(DescriptorFactory *);
-    virtual double calculate(OBMol *, OBMol *, double, Mode mode = Training);
+
+    MnaDescr();
+    const std::vector < double > & getDescriptors(OBMol *, Mode mode = Training);
 };
 
-#endif
-
+#endif // MNADESR_H
