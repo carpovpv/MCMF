@@ -23,7 +23,7 @@
 DescriptorFactory::DescriptorFactory(const std::string & name)
     :m_name(name)
 {
-
+    fprintf(stderr, "Loading %s.\n", name.c_str());
 }
 
 void DescriptorFactory::load(FILE *fp)

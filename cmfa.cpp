@@ -177,3 +177,8 @@ void CMFA::printSelKernels()
         printf("%s is loaded.\n", m_kernels[i]->getName().c_str());
 }
 
+CMFA::~CMFA()
+{
+    for(int i=0; i< m_kernels.size(); ++i)
+        delete m_kernels[i];
+}

@@ -70,7 +70,6 @@ void Svr::setProps(std::vector<std::string> *props)
 void Svr::setCMFA(CMFA *cmfa)
 {
     m_cmfa = cmfa;
-    m_cmfa->printSelKernels();
 
     if(lp != NULL)
     {

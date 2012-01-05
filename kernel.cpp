@@ -4,7 +4,7 @@ CKernel::CKernel(const std::string &name, DescriptorFactory *descrfactory)
     : m_name(name),
       m_descrfactory(descrfactory)
 {
-
+    fprintf(stderr, "Loading kernel %s.\n", name.c_str());
 }
 
 void CKernel::save(FILE *fp) const
@@ -16,7 +16,8 @@ void CKernel::save(FILE *fp) const
 
 CKernel::~CKernel()
 {
-
+    if(m_descrfactory)
+        delete m_descrfactory;
 }
 const std::string & CKernel::getName() const
 {

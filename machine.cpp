@@ -141,6 +141,11 @@ double Machine::optim(unsigned, const double *m_params, double *, void *ptr)
 
 }
 
+void Machine::setCMFA(CMFA *cmfa)
+{
+
+}
+
 struct result * Machine::create_result()
 {
     struct result * res = new struct result;

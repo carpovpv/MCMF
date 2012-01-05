@@ -64,76 +64,143 @@ void help()
            "based on continuous molecular field analysis (MCMF). \n");
 }
 
+DescriptorFactory * createDescriptor(int code)
+{
+    switch(code)
+    {
+    case D_MNA:
+        return new MnaDescr();
+    case D_FP2:
+        return new FingerPrints2s();
+    case D_SPECTROPHORES:
+        return new Spectrophores();
+    case D_UNKNOWNDESCR:
+        return NULL;
+    }
+    fprintf(stderr, "Unknown descriptor block!");
+    return NULL;
+
+}
+
+CKernel * createKernel(int kernel, DescriptorFactory * descr)
+{
+    switch(kernel)
+    {
+        case D_GAUSS:
+            return new GaussKernel(descr);
+        case D_LINEAR:
+            return new LinearKernel(descr);
+        case D_TANIMOTO:
+            return new TanimotoKernel(descr);
+        case D_ELECTROSTATIC:
+            return new ElectroStaticKernel();
+        case D_STERIC:
+            return new StericKernel();
+        case D_HYDROPHOBIC:
+            return new HydrophobicKernel();
+    }
+    return NULL;
+}
+
 int main(int argc, char ** argv)
 {
 
-    parse_command_line("");
+    if(argc == 1)
+    {
+        help();
+        return 0;
+    }
 
-    std::cout << cond.machine  << std::endl;
+    int s = 0;
+    for(int i=1; i< argc; ++i)
+        s += strlen(argv[i]);
+
+    char * params = (char *) calloc(s+argc, sizeof(char));
+
+    for(int i=1; i< argc; ++i)
+    {
+        strcat(params, argv[i]);
+        strcat(params, " ");
+    }
+
+    fprintf(stderr, "Command: %s\n", params);
+
+    if(!parse_command_line(params))
+        return 0;
+
+    free(params);
+
+    if(cond.help)
+    {
+        help();
+        return 0;
+    }
+
+    if(cond.prognosis)
+    {
+        fprintf(stderr, "Not implemented!\n");
+        return 0;
+    }
+
+
+    //for init global variables of OpenBabel
+    OBConversion obconversion;
+
+    boost::shared_ptr<Machine> machine;
+    if(cond.machine == "1-svm")
+        machine = boost::shared_ptr<Machine> (new OneClassSVM());
+    else if(cond.machine == "svr")
+        machine = boost::shared_ptr<Machine> (new Svr());
+    else
+    {
+        fprintf(stderr, "Unknown machine! Available are: 1-svm, svr.\n");
+        return 0;
+    }
+
+    if(cond.kernels.size() == 0)
+    {
+        fprintf(stderr, "Please, select at least one kernel!\n");
+        return 0;
+    }
+
+    boost::shared_ptr<CMFA> cmfa (new CMFA());
+
+    for(int i=0; i<  cond.kernels.size(); ++i)
+    {
+        DescriptorFactory * descr = createDescriptor(cond.kernels[i].descr);
+        CKernel * kernel = createKernel(cond.kernels[i].kernel, descr);
+        cmfa->addKernel(kernel);
+    }
+
+    if(cmfa->count() == 0)
+    {
+        fprintf(stderr, "Please, select at least one kernel!\n");
+        return 0;
+    }
+
+    machine->setCMFA(cmfa.get());
+
+    if(cond.sdf_train.empty())
+    {
+        fprintf(stderr, "Sdf-train filename is empty!\n");
+        return 0;
+    }
+
+    fprintf(stderr, "Sdf-test: %s\n", cond.sdf_test.c_str());
+    fprintf(stderr, "Sdf-train: %s\n", cond.sdf_train.c_str());
 
     srand(time(NULL));
 
     SEAL * train = NULL;
     SEAL * test = NULL;
 
-    FILE * fres = NULL;
+    FILE * fres = fopen(cond.results.c_str(), "w");
 
-    char * sdf_test = NULL;  //decoys
-    char * sdf_train = NULL; //ligands
-
-    int do_help = 0;
-    int do_prognosis = 0;
-    int max_iter = 3;
-    int cv = 10;
-
-    char * save_model = NULL;
-    char * file_res = NULL;
+    int max_iter = cond.max_iter;
+    int cv = cond.cv > 0 ? cond.cv : 10;
 
     std::vector< std::string> props;
 
-    struct option longopts[] = {
-        {"sdf-train", required_argument, NULL, 't'},
-        {"sdf-test", optional_argument, NULL, 'v'},
-        {"help", no_argument, & do_help, 1},
-        {"model", required_argument, NULL , 'm'},
-        {"results", required_argument, NULL, 'r'},
-        {"h", optional_argument, NULL, 'h'},
-        {"kernel", required_argument, NULL, 'k'},
-        {"machine", required_argument, NULL, 'a'},
-        {"property", optional_argument, NULL, 'p'},
-        {"prognosis", optional_argument, & do_prognosis, 1},
-        {"max-iter", optional_argument, NULL, 'i'},
-        {"cv", optional_argument, NULL, 'c'},
-        {0, 0, 0, 0}
-    };
-
-    //for init global variables of OpenBabel
-    OBConversion obconversion;
-    Machine * machine = NULL;
-
-    //default descriptor block
-    boost::shared_ptr<FingerPrints2s> fp2s( new FingerPrints2s());
-    boost::shared_ptr<Spectrophores> Spectr( new Spectrophores());
-    boost::shared_ptr<MnaDescr> mna( new MnaDescr());
-
-    boost::shared_ptr<CMFA> cmfa (new CMFA());
-
-    boost::shared_ptr<ElectroStaticKernel> electro (new ElectroStaticKernel());
-    boost::shared_ptr<HydrophobicKernel> hydrophobic (new HydrophobicKernel());
-    boost::shared_ptr<StericKernel> steric (new StericKernel());
-    boost::shared_ptr<LinearKernel> linear (new LinearKernel(fp2s.get()));
-
-    boost::shared_ptr<HydrophobicKernelV> hydrophobicv (new HydrophobicKernelV());
-    boost::shared_ptr<StericKernelK> sterick (new StericKernelK());
-
-    boost::shared_ptr<AbrahamKernelA> abrahama (new AbrahamKernelA());
-    boost::shared_ptr<AbrahamKernelB> abrahamb (new AbrahamKernelB());
-    boost::shared_ptr<AbrahamKernelE> abrahame (new AbrahamKernelE());
-    boost::shared_ptr<AbrahamKernelS> abrahams (new AbrahamKernelS());
-
-    boost::shared_ptr<GaussKernel> gauss( new GaussKernel(mna.get()));
-    boost::shared_ptr<GaussKernel> gaussSpect( new GaussKernel(Spectr.get()));
-    boost::shared_ptr<TanimotoKernel > tanimoto (new TanimotoKernel(fp2s.get()));
 
     double usep [MAX_PARAMS];
     double * userp = usep;
@@ -141,8 +208,12 @@ int main(int argc, char ** argv)
     for(int i =0; i< MAX_PARAMS; ++i)
         usep[i] = UNKNOWN_VALUE;
 
+    for(int i=0; i< cond.params.size() && i< MAX_PARAMS; ++i)
+        usep[i] = cond.params[i];
+
 
     ////start old parsing
+    /*
     int c;
     while( (c = getopt_long(argc, argv, "", longopts, NULL)) != -1)
     {
@@ -317,15 +388,10 @@ int main(int argc, char ** argv)
         }
     }
 
-
+*/
     ///// end parsing command line
 
-    if(do_help)
-    {
-        help();
-        return 0;
-    }
-
+    /*
     if(do_prognosis)
     {
         printf("Prognosis mode...\n");
@@ -501,7 +567,7 @@ int main(int argc, char ** argv)
 
         //model read
 
-        std::ifstream ifs(sdf_test);
+        std::ifstream ifs(cond.sdf_test.c_str());
 
         obconversion.SetInFormat("SDF");
         obconversion.SetInStream(&ifs);
@@ -532,8 +598,9 @@ int main(int argc, char ** argv)
         fprintf(stderr,"Select a kernel please.\n");
         return EX_USAGE;
     }
+*/
 
-    if(file_res == NULL)
+    if(cond.results.empty())
     {
         fprintf(stderr,"Select a result file please.\n");
         return EX_USAGE;
@@ -550,7 +617,7 @@ int main(int argc, char ** argv)
 
     try
     {
-        train = new SEAL(sdf_train, &props);
+        train = new SEAL(cond.sdf_train.c_str(), &props);
     }
     catch(std::exception &exc)
     {
@@ -558,11 +625,11 @@ int main(int argc, char ** argv)
         return EXIT_FAILURE;
     }
 
-    if(sdf_test)
+    if(!cond.sdf_test.empty())
     {
         try
         {
-            test = new SEAL(sdf_test);
+            test = new SEAL(cond.sdf_test.c_str());
         }
         catch(std::exception &exc)
         {
@@ -587,16 +654,15 @@ int main(int argc, char ** argv)
     machine->set_CV(cv);
     machine->init();
 
+
     machine->setParameters(usep);
 
     //machine->create();
     machine->create_random(max_iter);
 
-    machine->save(save_model);
+    machine->save(cond.model.c_str());
 
     if(fres != NULL) fclose(fres);
-
-    delete machine;
 
     return 0;
 }

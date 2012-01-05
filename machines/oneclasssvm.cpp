@@ -69,7 +69,6 @@ OneClassSVM::OneClassSVM() : Machine("1-SVM")
 void OneClassSVM::setCMFA(CMFA *cmfa)
 {
     m_cmfa = cmfa;
-    m_cmfa->printSelKernels();
 }
 
 OneClassSVM::~OneClassSVM()

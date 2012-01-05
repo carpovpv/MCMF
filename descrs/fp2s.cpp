@@ -26,6 +26,10 @@ FingerPrints2s::FingerPrints2s() :
     m_ndescr(1024)
 {
     m_ob  = OBFingerprint::FindFingerprint("FP2");
+    if(m_ob == NULL)
+    {
+        fprintf(stderr, "Error in loading FP2!\n");
+    }
     descrs.resize(m_ndescr);
 }
 

@@ -40,16 +40,15 @@ public:
     bool predict(OBMol *);
     bool build(const double * params, const std::vector<int> &flags, const std::vector<int> &mask);
 
-    void setCMFA( CMFA * cmfa);
     bool setData(SEAL *train_mols, SEAL *test_mols);
     void setProps(std::vector< std::string > * props);
 
     void clearCache();
     double statistic();
 
-private:
+    void setCMFA(CMFA *cmfa);
 
-    CMFA * m_cmfa;
+private:
 
     struct svm_parameter param;
     struct svm_problem problem;

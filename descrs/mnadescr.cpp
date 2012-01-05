@@ -2,8 +2,7 @@
 #include <openbabel/obconversion.h>
 
 MnaDescr::MnaDescr() : DescriptorFactory("MnaDescr")
-{
-
+{    
 }
 
 const std::vector < double > & MnaDescr::getDescriptors(OBMol * mol, Mode regime)

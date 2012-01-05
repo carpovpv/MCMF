@@ -2,6 +2,17 @@
 #define PARSER_H
 //Структура с нашими параметрами.
 
+#define D_ELECTROSTATIC 1
+#define D_STERIC        2
+#define D_HYDROPHOBIC   3
+#define D_GAUSS         4
+#define D_FP2           5
+#define D_MNA           6
+#define D_SPECTROPHORES 7
+#define D_LINEAR        8
+#define D_TANIMOTO      9
+#define D_UNKNOWNDESCR  10
+
 struct ConditionKernel
 {
         int kernel;    //ядро

@@ -55,7 +55,7 @@ private:
         double threshold;
     };
 
-    CMFA * m_cmfa;
+
     FILE * gp;
 
     struct svm_parameter param;

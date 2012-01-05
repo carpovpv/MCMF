@@ -1,10 +1,14 @@
 %{
   //Команды для лекса. Благодаря нему мы поддерживаем 
   //весьма произвольный порядок следования аргументов.
+
+#include "parser.h"
+
 extern "C"  int yywrap()
 {
 return 1;
 }
+
 %}
 delim [ \t\n]
 ws {delim}+
@@ -28,16 +32,16 @@ sdf-train 	{return LEX_SDF_TRAIN;}
 prognosis 	{return LEX_PROGNOSIS;}
 "=" 		{return '=';}
 "," 		{return ',';}
-"(" 		{return '(';}
-")" 		{return ')';}
-electrostatic 	{yylval.ival = K_ELECTROST; return K_KERNEL;}
-steric 		{yylval.ival = K_STERIC; return K_KERNEL;}
-hydrophobic 	{yylval.ival = K_HYDROPHOBIC; return K_KERNEL;}
-gauss 		{yylval.ival = K_GAUSS; return K_KERNEL;}
-linear 		{yylval.ival = K_LINEAR; return K_KERNEL;}
-tanimoto 	{yylval.ival = K_TANIMOTO; return K_KERNEL;}
+"[" 		{return '[';}
+"]" 		{return ']';}
+electrostatic 	{yylval.ival = D_ELECTROSTATIC; return K_KERNEL;}
+steric 		{yylval.ival = D_STERIC; return K_KERNEL;}
+hydrophobic 	{yylval.ival = D_HYDROPHOBIC; return K_KERNEL;}
+gauss 		{yylval.ival = D_GAUSS; return K_KERNEL;}
+linear 		{yylval.ival = D_LINEAR; return K_KERNEL;}
+tanimoto 	{yylval.ival = D_TANIMOTO; return K_KERNEL;}
 fp2 		{yylval.ival = D_FP2; return D_DESCR;}
-spectrophores 	{yylval.ival = D_SPECTR; return D_DESCR;}
+spectrophores 	{yylval.ival = D_SPECTROPHORES; return D_DESCR;}
 mna		{yylval.ival = D_MNA; return D_DESCR;}
 h 		{return LEX_PARAMS;}
 help 		{return LEX_HELP; }

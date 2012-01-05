@@ -54,7 +54,7 @@ struct molkey
 class CMFA :  boost::noncopyable
 {
 public:
-
+    ~CMFA();
     double calculate(OBMol *mol1, OBMol *mol2, Mode mode = Training);
 
     void addKernel(CKernel *);
