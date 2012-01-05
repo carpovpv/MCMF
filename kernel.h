@@ -27,8 +27,19 @@
 #include <string>
 #include <math.h>
 #include <map>
+#include <stdexcept>
 
 #include "descfact.h"
+
+class KernelFailed : public std::runtime_error
+{
+public:
+    explicit KernelFailed(const std::string& __arg):
+            runtime_error(__arg)
+    {
+
+    }
+};
 
 /*!
   The abstract class for kernel representation. Simple kernels should

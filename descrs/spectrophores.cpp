@@ -8,7 +8,6 @@ Spectrophores::Spectrophores()
     s.SetStereo(OpenBabel::OBSpectrophore::AllStereoSpecificProbes);
     s.SetNormalization(OpenBabel::OBSpectrophore::NormalizationTowardsZeroMeanAndUnitStd);
 
-
 }
 
 Spectrophores::~Spectrophores()

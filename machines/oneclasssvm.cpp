@@ -81,11 +81,6 @@ OneClassSVM::~OneClassSVM()
     }
 }
 
-void OneClassSVM::clearCache()
-{
-    m_cmfa->clearCache();
-}
-
 bool OneClassSVM::setData(SEAL *train_mols, SEAL *test_mols)
 {
     train = train_mols;
@@ -392,7 +387,8 @@ double OneClassSVM::statistic()
             min_r = temp;
     }
 
-    printf("max_r : %g\nmin_r : %g size: %d\n", max_r, min_r, results.size());
+    printf("[ %.6f; %.6f] => ", max_r, min_r);
+
     if(max_r == -DBL_MAX || min_r == DBL_MAX)
         return 0;
 
@@ -468,7 +464,7 @@ double OneClassSVM::statistic()
     }
 
     AUC = AUC * 0.5;
-    printf("AUC: %g\n", AUC);
+    printf("AUC: %.4f\n", AUC);
 
     FILE * temp = fopen("temp","w");
     for(int i =0; i< auc.size(); i++)
@@ -564,7 +560,7 @@ double OneClassSVM::statistic()
 void OneClassSVM::predict_decoys()
 {
 
-    m_cmfa->clearCache();
+    //m_cmfa->clearCache();
 
     //param.nu = Parameters[0];
 

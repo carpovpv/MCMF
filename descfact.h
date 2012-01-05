@@ -27,8 +27,19 @@
 
 #include <openbabel/mol.h>
 #include <boost/utility.hpp>
+#include <stdexcept>
 
 using namespace OpenBabel;
+
+class DescrFailed : public std::runtime_error
+{
+public:
+    explicit DescrFailed(const std::string& __arg):
+            runtime_error(__arg)
+    {
+
+    }
+};
 
 //Если используется Training, все значения дескрипторов, ядер и норм запоминаются в локальных
 //кэшах. Если Prediction, то они всегда вычисляются

@@ -27,26 +27,6 @@
 #include <vector>
 #include "kernel.h"
 
-struct molkey
-{
-    OBMol * first;
-    OBMol * second;
-    bool  operator < ( const molkey & l) const
-    {
-        int * f1 = reinterpret_cast<int *> (this->first);
-        int * f2 = reinterpret_cast<int *> (l.first);
-
-        int * s1 = reinterpret_cast<int *> (this->second);
-        int * s2 = reinterpret_cast<int *> (l.second);
-
-        if( f1 < f2) return true;
-        if( f1 == f2 && s1 < s2) return true;
-
-        return false;
-    }
-};
-
-
 /*!
   Continuous Molecular Field Analysis.
 */
@@ -78,10 +58,10 @@ private:
 
     const double * m_h;
 
-    std::map < struct molkey, double > gramm;
-
+    std::map < OBMol *, std::map<OBMol *, double > > gramm;
     //Kernel norms
     std::map < OBMol *, double> norms;
+
     double calculate_n(OBMol *mol1, OBMol *mol2, Mode mode = Training);
 };
 

@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <nlopt.h>
 #include <time.h>
+#include "cmfa.h"
 
 Machine::Machine(const std::string & name) : m_name(name)
 {
@@ -71,6 +72,11 @@ int Machine::get_CV()
     return m_CV;
 }
 
+void Machine::clearCache()
+{
+    m_cmfa->clearCache();
+}
+
 double Machine::optim(unsigned, const double *m_params, double *, void *ptr)
 {
 
@@ -87,22 +93,24 @@ double Machine::optim(unsigned, const double *m_params, double *, void *ptr)
 
     double CV = machine->get_CV();
 
-    printf("Try: ");
+    machine->clearCache();
+
+    printf("[");
     for(int i =0; i< machine->m_NumParameters; ++i)
-        printf(" %.8f ", m_params[i]);
-    printf("\n");
+        printf(" %.6f ", m_params[i]);
+    printf("] => ");
 
     for(int i =0; i < machine->results.size(); ++i)
         machine->drop_result(machine->results[i]);
 
     machine->results.clear();
-    machine->clearCache();
 
     std::vector < int > mask(N);
     std::vector < int > flags(N);
 
     for(int i =0; i< N; ++i)
         mask[i] = i;
+
 
     //random_shuffle(mask.begin(), mask.end());
 
@@ -243,8 +251,6 @@ double Machine::create(nlopt_algorithm algo)
 double Machine::create_random(int max_iter)
 {
 
-
-
     double *best_params = (double *) calloc(m_NumParameters,sizeof(double));
     double best_rmse = -RAND_MAX;
 
@@ -255,7 +261,6 @@ double Machine::create_random(int max_iter)
 
     while(iter++<max_iter)
     {
-        srand(time(NULL));
 
         //double temp = create();
         double temp = optim(0, Parameters,NULL, this);

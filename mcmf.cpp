@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <getopt.h>
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -60,8 +59,8 @@ const int MAX_PARAMS = 20;
 
 void help()
 {
-    printf("The program for building models for virtual screening \n"
-           "based on continuous molecular field analysis (MCMF). \n");
+    std::cout << "The program for building models for virtual screening \n"
+                  "based on continuous molecular field analysis (MCMF). \n";
 }
 
 DescriptorFactory * createDescriptor(int code)
@@ -77,7 +76,7 @@ DescriptorFactory * createDescriptor(int code)
     case D_UNKNOWNDESCR:
         return NULL;
     }
-    fprintf(stderr, "Unknown descriptor block!");
+    std::cerr << "Unknown descriptor block!" << std::endl;
     return NULL;
 
 }
@@ -98,6 +97,8 @@ CKernel * createKernel(int kernel, DescriptorFactory * descr)
             return new StericKernel();
         case D_HYDROPHOBIC:
             return new HydrophobicKernel();
+        default:
+        std::cerr << "Unknown kernel block!\n";
     }
     return NULL;
 }
@@ -111,24 +112,18 @@ int main(int argc, char ** argv)
         return 0;
     }
 
-    int s = 0;
-    for(int i=1; i< argc; ++i)
-        s += strlen(argv[i]);
-
-    char * params = (char *) calloc(s+argc, sizeof(char));
-
+    std::string params;
     for(int i=1; i< argc; ++i)
     {
-        strcat(params, argv[i]);
-        strcat(params, " ");
+        params += argv[i];
+        params += " ";
     }
 
-    fprintf(stderr, "Command: %s\n", params);
+    std::cerr << "Program launched with command: " << params << std::endl;
 
-    if(!parse_command_line(params))
+    //Launch Yacc to parse command line.
+    if(!parse_command_line(params.c_str()))
         return 0;
-
-    free(params);
 
     if(cond.help)
     {
@@ -142,8 +137,7 @@ int main(int argc, char ** argv)
         return 0;
     }
 
-
-    //for init global variables of OpenBabel
+    //init global variables of OpenBabel
     OBConversion obconversion;
 
     boost::shared_ptr<Machine> machine;
@@ -153,13 +147,13 @@ int main(int argc, char ** argv)
         machine = boost::shared_ptr<Machine> (new Svr());
     else
     {
-        fprintf(stderr, "Unknown machine! Available are: 1-svm, svr.\n");
+        std::cerr << "Unknown machine! Available are: 1-svm, svr.\n" << std::endl;
         return 0;
     }
 
     if(cond.kernels.size() == 0)
     {
-        fprintf(stderr, "Please, select at least one kernel!\n");
+        std::cerr << "Please, select at least one kernel!\n" << std::endl;
         return 0;
     }
 
@@ -167,14 +161,36 @@ int main(int argc, char ** argv)
 
     for(int i=0; i<  cond.kernels.size(); ++i)
     {
-        DescriptorFactory * descr = createDescriptor(cond.kernels[i].descr);
-        CKernel * kernel = createKernel(cond.kernels[i].kernel, descr);
+        DescriptorFactory * descr = NULL;
+        try
+        {
+            descr = createDescriptor(cond.kernels[i].descr);
+        }catch( DescrFailed &f)
+        {
+            std::cerr << f.what() << std::endl;
+            return 0;
+        }
+
+        CKernel * kernel = NULL;
+        try
+        {
+            kernel = createKernel(cond.kernels[i].kernel, descr);
+        }
+        catch(KernelFailed & k)
+        {
+            std::cerr << k.what() << std::endl;
+            if(descr)
+                delete descr;
+
+            return 0;
+        }
+
         cmfa->addKernel(kernel);
     }
 
     if(cmfa->count() == 0)
     {
-        fprintf(stderr, "Please, select at least one kernel!\n");
+        std::cerr <<  "Please, select at least one kernel!\n" << std::endl;
         return 0;
     }
 
@@ -182,14 +198,20 @@ int main(int argc, char ** argv)
 
     if(cond.sdf_train.empty())
     {
-        fprintf(stderr, "Sdf-train filename is empty!\n");
+        std::cerr <<  "Sdf-train filename is empty!\n" << std::endl;
         return 0;
     }
 
-    fprintf(stderr, "Sdf-test: %s\n", cond.sdf_test.c_str());
-    fprintf(stderr, "Sdf-train: %s\n", cond.sdf_train.c_str());
+    std::cerr <<  "Sdf-test: " << cond.sdf_test << std::endl;
+    std::cerr <<  "Sdf-train: "<< cond.sdf_train << std::endl;
 
     srand(time(NULL));
+
+    if(cond.results.empty())
+    {
+        std::cerr << "Please, select a result file!" << std::endl;
+        return 0;
+    }
 
     SEAL * train = NULL;
     SEAL * test = NULL;
@@ -201,9 +223,7 @@ int main(int argc, char ** argv)
 
     std::vector< std::string> props;
 
-
     double usep [MAX_PARAMS];
-    double * userp = usep;
 
     for(int i =0; i< MAX_PARAMS; ++i)
         usep[i] = UNKNOWN_VALUE;

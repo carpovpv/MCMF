@@ -34,6 +34,7 @@ struct result
     double * y_real;
     double * y_pred;
 };
+
 class CMFA;
 class Machine : boost::noncopyable
 {
@@ -53,7 +54,7 @@ public:
                        const std::vector<int > & mask) = 0;
 
     virtual bool predict(OBMol *) = 0;
-    virtual void clearCache() {}
+    virtual void clearCache();
     virtual void setCMFA(CMFA *cmfa);
 
     void setParameters(double *);

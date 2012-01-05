@@ -147,7 +147,7 @@ ConditionKernel kern;
 
 #include "lex.yy.cpp"
 
-bool parse_command_line( char *str)
+bool parse_command_line(const char *str)
 {
     yy_delete_buffer(YY_CURRENT_BUFFER);
     YY_BUFFER_STATE buf = yy_scan_string(str);

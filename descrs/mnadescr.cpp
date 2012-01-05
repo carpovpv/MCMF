@@ -7,7 +7,6 @@ MnaDescr::MnaDescr() : DescriptorFactory("MnaDescr")
 
 const std::vector < double > & MnaDescr::getDescriptors(OBMol * mol, Mode regime)
 {
-    static int y = 0;
     //const bool regime = true;
     if(regime == Training)
     {
@@ -15,10 +14,7 @@ const std::vector < double > & MnaDescr::getDescriptors(OBMol * mol, Mode regime
         it = m_descrs.find(mol);
 
         if(it != m_descrs.end())
-        {
             return m_descrs[mol];
-        }
-
     }
 
     std::stringstream st;
@@ -88,7 +84,6 @@ const std::vector < double > & MnaDescr::getDescriptors(OBMol * mol, Mode regime
     {
         descrs.resize(n1, 1.0);
         descrnames = curnames;
-        std::cout << descrnames.size() << std::endl;
     }
 
     if(regime == Training)

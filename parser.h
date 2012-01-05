@@ -34,7 +34,7 @@ struct ConditionParams
         bool help;						//помощь
 };
 
-extern "C" bool parse_command_line(char * str);
+extern "C" bool parse_command_line(const char * str);
 extern struct ConditionParams cond;
 
 #endif // PARSER_H

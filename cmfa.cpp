@@ -40,28 +40,26 @@ double CMFA::calculate_n(OBMol *mol1, OBMol *mol2, Mode mode)
     double p = kernel->calculate(mol1, mol2, m_h[i*2], mode);
 
     s+= (1.0 - hh) * p;
+
     return s;
 }
 
-double CMFA::calculate(OBMol *mol1, OBMol * mol2, Mode regime)
+double CMFA::calculate(OBMol *m1, OBMol * m2, Mode regime)
 {
-    struct molkey mol;
-    if(regime == Training) //обучение - берем из кэша. Необходимо менять семантику функции.
+    OBMol * mol1 = m1;
+    OBMol * mol2 = m2;
+
+    if(regime == Training) //обучение - берем из кэша.
     {
-
-        if( reinterpret_cast<int *> (mol1) < reinterpret_cast<int *> (mol2) )
+        if( reinterpret_cast<int *> (m1) > reinterpret_cast<int *> (m2) )
         {
-            mol.first = mol1;
-            mol.second = mol2;
-        }
-        else
-        {
-            mol.first = mol2;
-            mol.second = mol1;
+            mol1 = m2;
+            mol2 = m1;
         }
 
-        if(gramm.find(mol) != gramm.end())
-            return gramm[mol];
+        if(gramm.find(mol1) != gramm.end())
+            if(gramm[mol1].find(mol2) != gramm[mol1].end())
+                return gramm[mol1][mol2];
     }
 
     double s = calculate_n(mol1, mol2);
@@ -99,16 +97,23 @@ double CMFA::calculate(OBMol *mol1, OBMol * mol2, Mode regime)
          s /= sqrt(s1 * s2);
     }
 
-    if(regime)
-        gramm[mol] = s;
-
+    if(regime == Training)
+    {
+        gramm[mol1][mol2] = s;
+    }
     return s;
 
 }
 
 void CMFA::clearCache()
 {
-    //printf("Gramm size: %d\n", gramm.size());
+    /*printf("Gramm matrix:\n");
+    std::map < OBMol *, std::map<OBMol *, double > >::iterator it;
+    for(it = gramm.begin(); it!= gramm.end(); ++it)
+        printf("%d\n", it->second.size());
+
+    printf("=============\n");*/
+
     gramm.clear();
     norms.clear();
 }
