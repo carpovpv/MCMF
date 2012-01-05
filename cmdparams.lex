@@ -13,7 +13,7 @@ return 1;
 delim [ \t\n]
 ws {delim}+
 digit [0-9]
-letter [a-zA-Z\.\-_]
+letter [a-zA-Z\.\-_/]
 number {digit}+(\.{digit}+)?(E[+-]?{digit}+)?
 id {digit}*{letter}({letter}|{digit})*
 posint {digit}+

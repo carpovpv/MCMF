@@ -89,6 +89,7 @@ protected:
 
     struct result * create_result();
     void drop_result(struct result *);
+    bool reallast;
 
 private:
 

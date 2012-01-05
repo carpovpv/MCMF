@@ -216,8 +216,6 @@ int main(int argc, char ** argv)
     SEAL * train = NULL;
     SEAL * test = NULL;
 
-    FILE * fres = fopen(cond.results.c_str(), "w");
-
     int max_iter = cond.max_iter;
     int cv = cond.cv > 0 ? cond.cv : 10;
 
@@ -230,186 +228,6 @@ int main(int argc, char ** argv)
 
     for(int i=0; i< cond.params.size() && i< MAX_PARAMS; ++i)
         usep[i] = cond.params[i];
-
-
-    ////start old parsing
-    /*
-    int c;
-    while( (c = getopt_long(argc, argv, "", longopts, NULL)) != -1)
-    {
-        double k;
-        char *p, *s;
-        char prop[1024];
-        int i =0,l;
-
-        switch(c)
-        {
-        case 'i':
-            max_iter=atoi(optarg);
-            break;
-        case 'c':
-            cv=atoi(optarg);
-            break;
-        case 'p':
-            p = optarg;
-            do
-            {
-                i = 0;
-                while(*p!='\0' && *p != ',')
-                    prop[i++] = *p++;
-                prop[i]='\0';
-                props.push_back(prop);
-
-            } while(*p++!='\0');
-
-            printf("Properties:\n");
-            for(i=0; i< props.size(); ++i)
-                printf("\t%s\n", props[i].c_str());
-
-            break;
-        case 'k':
-            sprintf(prop,"%s", optarg);
-            s = p = prop;
-            l=0;
-            while(true)
-            {
-                if(*p == ',' || *p == '\0')
-                {
-                    if(*p=='\0') l = 1;
-
-                    *p='\0';
-                    p++;
-                    if(!strcmp(s,"electrostatic"))
-                        cmfa->addKernel(electro.get());
-                    else if(!strcmp(s, "hydrophobic"))
-                        cmfa->addKernel(hydrophobic.get());
-                    else if(!strcmp(s, "steric"))
-                        cmfa->addKernel(steric.get());
-                    else if(!strcmp(s, "linear"))
-                        cmfa->addKernel(linear.get());
-                    else if(!strcmp(s, "gauss"))
-                        cmfa->addKernel(gauss.get());
-                    else if(!strcmp(s, "tanimoto"))
-                        cmfa->addKernel(tanimoto.get());
-                    else if(!strcmp(s, "hydrophobicv"))
-                        cmfa->addKernel(hydrophobicv.get());
-                    else if(!strcmp(s, "sterick"))
-                        cmfa->addKernel(sterick.get());
-                    else if(!strcmp(s,"abrahama"))
-                        cmfa->addKernel(abrahama.get());
-                    else if(!strcmp(s,"abrahamb"))
-                        cmfa->addKernel(abrahamb.get());
-                    else if(!strcmp(s,"abrahame"))
-                        cmfa->addKernel(abrahame.get());
-                    else if(!strcmp(s,"abrahams"))
-                        cmfa->addKernel(abrahams.get());
-                    else if(!strcmp(s,"gaussspectr"))
-                        cmfa->addKernel(gaussSpect.get());
-                    else
-                    {
-                        fprintf(stderr,"Unknown kernel %s.\n", s);
-                        return EX_USAGE;
-                    }
-                    s = p;
-                    if(l)
-                        break;
-                }
-                else
-                    p++;
-            }
-            break;
-        case 'a':
-            if(!strcmp(optarg, "1-svm"))
-            {
-                if(machine != NULL)
-                {
-                    fprintf(stderr,"Several machines are not supported.\n");
-                    return EX_USAGE;
-                }
-
-                OneClassSVM * svm_1 = new OneClassSVM();
-                svm_1->setCMFA(cmfa.get());
-                machine = svm_1;
-            }
-            else if(!strcmp(optarg, "svr"))
-            {
-                if(machine != NULL)
-                {
-                    fprintf(stderr,"Several machines are not supported.\n");
-                    return EX_USAGE;
-                }
-
-                Svr * svr = new Svr();
-                svr->setCMFA(cmfa.get());
-                svr->setProps(&props);
-                machine = svr;
-            }
-            else
-            {
-                fprintf(stderr,"Unknown machine!\n");
-                return EX_USAGE;
-            }
-            break;
-        case 't':
-            sdf_train = optarg;
-            break;
-        case 'v':
-            sdf_test = optarg;
-            break;
-        case 'r':
-            file_res = optarg;
-            fres = fopen(file_res, "w");
-            if(fres == NULL)
-            {
-                fprintf(stderr, "Unable to create the file %s\n", file_res);
-                return EX_USAGE;
-            }
-            break;
-        case 'm':
-            save_model = optarg;
-            break;
-        case 'h':
-            p = optarg;
-            while (true)
-            {
-                sscanf (p, "%lf", &k);
-                printf("h: %g\n", k);
-
-                if(userp - usep > MAX_PARAMS)
-                {
-                    fprintf(stderr, "Max params exceeded!\n");
-                    return EX_USAGE;
-                }
-
-                *userp++ = k;
-
-                while (isdigit (*p))
-                    p++;
-                if (*p == ',')
-                    p++;
-                else if(*p == '.')
-                {
-                    p++;
-                    while (isdigit(*p)) p++;
-                    if(*p == '\0')
-                        break;
-                    p++;
-                }
-                else if (*p == '\0')
-                    break;
-            }
-
-            break;
-        case 0:
-            break;
-        default:
-            return EX_USAGE;
-            break;
-        }
-    }
-
-*/
-    ///// end parsing command line
 
     /*
     if(do_prognosis)
@@ -619,7 +437,6 @@ int main(int argc, char ** argv)
         return EX_USAGE;
     }
 */
-
     if(cond.results.empty())
     {
         fprintf(stderr,"Select a result file please.\n");
@@ -670,19 +487,45 @@ int main(int argc, char ** argv)
     if(!machine->setData(train, test))
         return EX_USAGE;
 
+    FILE * fres = fopen(cond.results.c_str(), "w");
+    fprintf(fres, "MCMF RESULT FILE.\n");
+    fprintf(fres, "Command: %s\n", params.c_str());
+
+    char outstr[200];
+    time_t t;
+    struct tm *tmp;
+
+    t = time(NULL);
+    tmp = localtime(&t);
+    strftime(outstr, sizeof(outstr), "%d/%m/%Y %H:%M:%S", tmp);
+
+
+    fprintf(fres, "STARTED AT: %s\n\n", outstr);
+    fputs("------------------------------------------------\n", fres);
+    fputs("OPTIMIZATION\n",fres);
+    fputs("------------------------------------------------\n\n", fres);
+    fputs("Parameters => Min & Max Values of Calculated Results => Quality\n\n", fres);
+
     machine->setOutput(fres);
     machine->set_CV(cv);
     machine->init();
 
 
     machine->setParameters(usep);
-
-    //machine->create();
     machine->create_random(max_iter);
 
     machine->save(cond.model.c_str());
 
-    if(fres != NULL) fclose(fres);
+    t = time(NULL);
+    tmp = localtime(&t);
+    strftime(outstr, sizeof(outstr), "%d/%m/%Y %H:%M:%S", tmp);
+
+
+    fprintf(fres, "\nFINISHED AT: %s\n\n", outstr);
+    fprintf(fres, "THANK YOU FOR USING THE PROGRAM!\n");
+
+    if(fres != NULL)
+        fclose(fres);
 
     return 0;
 }

@@ -388,6 +388,7 @@ double OneClassSVM::statistic()
     }
 
     printf("[ %.6f; %.6f] => ", max_r, min_r);
+    fprintf(fres, "[ %.6f; %.6f] => ", max_r, min_r);
 
     if(max_r == -DBL_MAX || min_r == DBL_MAX)
         return 0;
@@ -465,22 +466,15 @@ double OneClassSVM::statistic()
 
     AUC = AUC * 0.5;
     printf("AUC: %.4f\n", AUC);
+    fprintf(fres, "AUC: %.4f\n", AUC);
 
-    FILE * temp = fopen("temp","w");
-    for(int i =0; i< auc.size(); i++)
-        fprintf(temp, "%g %g\n", auc[i].fpr, auc[i].tpr );
-
-    fclose(temp);
-
-    //fprintf(gp, "plot 'temp' with lines, x\n");
-
-    //fflush(gp);
-
-    if(mode)
+    if(mode && reallast)
     {
+        fprintf(fres, "\nFINAL ROC CURVE (1-SPECIFICITY) -> SENSITIVITY\n");
+        fputs("------------------------------------------------\n", fres);
 
         for(int i =0; i< auc.size(); i++)
-            fprintf(fres, "%g %g\n", auc[i].fpr, auc[i].tpr );
+            fprintf(fres, "\t%.6f\t%.6f\n", auc[i].fpr, auc[i].tpr );
 
         double ot = 0.0;
         double m_ot1, m1;
@@ -540,14 +534,32 @@ double OneClassSVM::statistic()
             }
         }
 
-        double fpr = fp / (tn + fp);
-        double tpr = tp / (tp + fn);
+        fputs("\n------------------------------------------------\n", fres);
+        fputs("STATISTICS\n", fres);
+        fputs("------------------------------------------------\n\n", fres);
 
-        fprintf(fres, "\n%.2f ", AUC);
-        fprintf(fres, " %.4f %.0f %.0f %.0f %.0f %.2f %.2f ", ot, tn, tp, fn, fp, 100 * tn/(tn+fp),100 * tp/(tp+fn));
 
+        fprintf(fres, "Area Under Curve: %.2f\n", AUC);
+        fprintf(fres, "Optimal Threshold: %.4f\n\n", ot);
+
+        fputs("When optimal threshold is chosen\n", fres);
+        fputs("------------------------------------------------\n", fres);
+        fprintf(fres, "True Negative: %.0f\n", tn);
+        fprintf(fres, "True Positive: %.0f\n", tp);
+        fprintf(fres, "False Negative: %.0f\n", fn);
+        fprintf(fres, "False Positive: %.0f\n\n", fp);
+
+        fputs("------------------------------------------------\n", fres);
+        fprintf(fres, "Specificity: %.2f\n" , 100 * tn/(tn+fp));
+        fprintf(fres, "Sensitivity: %.2f\n\n", 100 * tp/(tp+fn));
+
+
+        fputs("------------------------------------------------\n", fres);
+        fprintf(fres, "Parameters:\n");
         for(int i =0; i< m_NumParameters; ++i)
             fprintf(fres, " %g ", Parameters[i]);
+
+        fprintf(fres,"\n");
 
         fflush(fres);
         m_threshold = ot;
@@ -673,12 +685,6 @@ void OneClassSVM::predict_decoys()
 
     svm_free_and_destroy_model(&model);
     svm_destroy_param(&param);
-
-    /*FILE * rr = fopen("rr.res","w");
-    for( int i = 0; i< results.size(); ++i)
-        fprintf(rr, "%g %g\n", results[i]->y_real[0], results[i]->y_pred[0]);
-    fclose(rr);
-    */
 }
 
 bool OneClassSVM::predict(OBMol * mol)
@@ -723,47 +729,5 @@ bool OneClassSVM::predict(OBMol * mol)
     double y  = svm_predict(real_model, testing);
     printf("%g\n", y);
 
-
-    /* if(y >= m_threshold)
-     {
-         printf("%s %d %g\n", mol->GetTitle(), y >= m_threshold ? 1 : 0 ,  y);
-         QString title(mol->GetTitle());
-         QSqlQuery query;
-         query.prepare("select zincode from zinc where zincode = ?");
-         query.addBindValue(title);
-         if(!query.exec())
-             std::cerr << query.lastError().databaseText().toAscii().data() << std::endl;
-         if(query.next())
-         {
-             query.clear();
-             query.prepare("update zinc set electrostatic = ? where zincode = ?");
-             query.addBindValue(y);
-             query.addBindValue(title);
-             query.exec();
-         }
-         else
-         {
-             //no such code
-             std::stringstream st;
-
-             OBConversion conv(NULL, &st);
-             conv.SetOutFormat("SDF");
-             conv.Write(mol);
-
-             query.clear();
-             query.prepare("insert into zinc(zincode, electrostatic, mol) values(?, ?, ?)");
-             query.addBindValue(title);
-             query.addBindValue(y);
-             query.addBindValue(st.str().c_str());
-             query.exec();
-         }
-     }*/
-
-
-    //m_cmfa->clearCache();
-    //m_cmfa->clearNorms();
-
     free(testing);
-
-
 }

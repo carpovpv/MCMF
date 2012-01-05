@@ -33,6 +33,7 @@ Machine::Machine(const std::string & name) : m_name(name)
     train = NULL;
     fres = NULL;
     m_CV = 10;
+    reallast = false;
 }
 
 void Machine::setOutput(FILE * f)
@@ -96,9 +97,14 @@ double Machine::optim(unsigned, const double *m_params, double *, void *ptr)
     machine->clearCache();
 
     printf("[");
+    fprintf(machine->fres, "[");
     for(int i =0; i< machine->m_NumParameters; ++i)
+    {
         printf(" %.6f ", m_params[i]);
+        fprintf(machine->fres," %.6f ", m_params[i]);
+    }
     printf("] => ");
+    fprintf(machine->fres, "] => ");
 
     for(int i =0; i < machine->results.size(); ++i)
         machine->drop_result(machine->results[i]);
@@ -281,6 +287,7 @@ double Machine::create_random(int max_iter)
     for(int i =0; i< m_NumParameters; ++i)
         Parameters[i] = best_params[i];
 
+    reallast = true;
     double temp = create();
 
     if(temp > best_rmse)
