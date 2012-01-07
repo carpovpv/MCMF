@@ -28,6 +28,7 @@ set (HEADERS
         machines/oneclasssvm.h
         machines/svr.h
         fields.h
+        parser.h
 )
 
 

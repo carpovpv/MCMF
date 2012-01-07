@@ -23,6 +23,7 @@
 
 HydrophobicKernel::HydrophobicKernel() : CKernel("Hydrophobic")
 {
+    kerncode = D_HYDROPHOBIC;
 }
 
 double HydrophobicKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma, Mode)

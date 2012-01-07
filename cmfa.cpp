@@ -62,7 +62,7 @@ double CMFA::calculate(OBMol *m1, OBMol * m2, Mode regime)
                 return gramm[mol1][mol2];
     }
 
-    double s = calculate_n(mol1, mol2);
+    double s = calculate_n(mol1, mol2, regime);
 
     //need normalisation
 

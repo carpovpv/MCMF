@@ -30,6 +30,7 @@ FingerPrints2s::FingerPrints2s() :
         throw(DescrFailed("Error in loading FP2!"));
 
     descrs.resize(m_ndescr);
+    descrcode = D_FP2;
 }
 
 const std::vector < double > & FingerPrints2s::getDescriptors(OBMol * mol, Mode regime)
@@ -44,6 +45,16 @@ const std::vector < double > & FingerPrints2s::getDescriptors(OBMol * mol, Mode 
             return m_descrs[mol];
         }
     }
+    else
+    {
+        std::string c = mol->GetData("prognosis")->GetValue();
+        long cur = atol(c.c_str());
+
+        if( prev == cur)
+            return descrs;
+        prev = cur;
+    }
+
     //calc descrs...
 
     std::vector< unsigned int> fp;
@@ -66,4 +77,10 @@ const std::vector < double > & FingerPrints2s::getDescriptors(OBMol * mol, Mode 
         m_descrs[mol] = descrs;
 
     return descrs;
+}
+
+void FingerPrints2s::load(FILE *fp)
+{
+    char names[255];
+    fgets(names, 255, fp);
 }

@@ -45,6 +45,8 @@ public:
 
     double statistic();
 
+    void after_prognosis();
+
 private:
 
     struct res_auc
@@ -54,8 +56,6 @@ private:
         double threshold;
     };
 
-
-    FILE * gp;
 
     struct svm_parameter param;
     struct svm_problem problem;
@@ -69,6 +69,8 @@ private:
 
     static int res_comp(struct res_auc a1, struct res_auc a2);
 
+    long tested;
+    long active;
 
 };
 

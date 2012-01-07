@@ -34,6 +34,7 @@ public:
     FingerPrints2s();
 
     const std::vector < double > & getDescriptors(OBMol *, Mode mode = Training);
+    void load(FILE *fp);
 
 private:
     const int m_ndescr;

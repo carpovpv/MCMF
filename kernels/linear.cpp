@@ -4,6 +4,7 @@ LinearKernel::LinearKernel(DescriptorFactory * descr) : CKernel("Linear", descr)
 {
     if(descr == NULL)
         throw KernelFailed("Linear kernel implies a descriptor!");
+    kerncode = D_LINEAR;
 }
 
 double LinearKernel::calculate(OBMol * mol1, OBMol * mol2, double, Mode regime)

@@ -29,6 +29,8 @@
 #include <boost/utility.hpp>
 #include <stdexcept>
 
+#include "parser.h"
+
 using namespace OpenBabel;
 
 class DescrFailed : public std::runtime_error
@@ -62,6 +64,8 @@ public:
     virtual void save(FILE * fp) const;
     virtual void load(FILE * fp);
 
+    void setPrognosis(bool );
+
 protected:
 
     //временный вектор для работы над текущей структурой
@@ -73,6 +77,11 @@ protected:
     //названия дескрипторов. Во многих блоках не используется,
     //
     std::vector <std::string> descrnames;
+
+    int descrcode;
+    long prev;
+
+    bool prognosis;
 
 private:
 

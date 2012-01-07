@@ -3,7 +3,7 @@
 
 ElectroStaticKernel::ElectroStaticKernel() : CKernel("ElectroStatic")
 {
-
+    kerncode = D_ELECTROSTATIC;
 }
 
 ElectroStaticKernel::~ElectroStaticKernel()

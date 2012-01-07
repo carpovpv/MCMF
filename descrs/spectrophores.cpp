@@ -8,6 +8,7 @@ Spectrophores::Spectrophores()
     s.SetStereo(OpenBabel::OBSpectrophore::AllStereoSpecificProbes);
     s.SetNormalization(OpenBabel::OBSpectrophore::NormalizationTowardsZeroMeanAndUnitStd);
 
+    descrcode = D_SPECTROPHORES;
 }
 
 Spectrophores::~Spectrophores()
@@ -29,6 +30,15 @@ const std::vector < double > & Spectrophores::getDescriptors(OBMol * mol, Mode r
             return m_descrs[mol];
         }
 
+    }
+    else
+    {
+        std::string c = mol->GetData("prognosis")->GetValue();
+        long cur = atol(c.c_str());
+
+        if( prev == cur)
+            return descrs;
+        prev = cur;
     }
 
     std::vector<double> result = s.GetSpectrophore(mol);

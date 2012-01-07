@@ -23,7 +23,7 @@
 
 AbrahamKernelA::AbrahamKernelA() : CKernel("AbrahamA")
 {
-
+    kerncode = D_ABRAHAMA;
 }
 
 double AbrahamKernelA::calculate(OBMol * mol1, OBMol * mol2, double gamma, Mode)
@@ -56,7 +56,7 @@ double AbrahamKernelA::calculate(OBMol * mol1, OBMol * mol2, double gamma, Mode)
 
 AbrahamKernelB::AbrahamKernelB() : CKernel("AbrahamB")
 {
-
+    kerncode = D_ABRAHAMB;
 }
 
 double AbrahamKernelB::calculate(OBMol * mol1, OBMol * mol2, double gamma, Mode)
@@ -89,6 +89,7 @@ double AbrahamKernelB::calculate(OBMol * mol1, OBMol * mol2, double gamma, Mode)
 
 AbrahamKernelE::AbrahamKernelE() : CKernel("AbrahamE")
 {
+    kerncode = D_ABRAHAME;
 }
 
 double AbrahamKernelE::calculate(OBMol * mol1, OBMol * mol2, double gamma, Mode)
@@ -121,7 +122,7 @@ double AbrahamKernelE::calculate(OBMol * mol1, OBMol * mol2, double gamma, Mode)
 
 AbrahamKernelS::AbrahamKernelS() : CKernel("AbrahamS")
 {
-
+    kerncode = D_ABRAHAMS;
 }
 
 double AbrahamKernelS::calculate(OBMol * mol1, OBMol * mol2, double gamma, Mode)

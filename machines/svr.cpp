@@ -54,10 +54,6 @@ Svr::Svr() : Machine("SVR")
     m_props = NULL;
     NP = 0;
 
-    gp = popen(GNUPLOT,"w"); /* 'gp' is the pipe descriptor */
-    if(gp == NULL)
-        fprintf(stderr, "Error init gnuplot\n");
-
 }
 
 void Svr::setProps(std::vector<std::string> *props)
@@ -110,8 +106,6 @@ Svr::~Svr()
         free(mp);
         free(Parameters);
     }
-    if(gp !=  NULL)
-        pclose(gp);
 }
 
 bool Svr::setData(SEAL *train_mols, SEAL *test_mols)
@@ -499,9 +493,6 @@ double Svr::statistic()
 
     fclose(fp);
 
-    fprintf(gp, "plot 'temp', x\n");
-
-    fflush(gp);
 
     double q2 = 1.0 - PRESS / SD;
     double RMSE = sqrt(PRESS/ results.size());

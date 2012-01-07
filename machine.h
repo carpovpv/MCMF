@@ -27,7 +27,6 @@
 #include "boost/utility.hpp"
 
 #define UNKNOWN_VALUE 666
-#define GNUPLOT "gnuplot -persist"
 
 struct result
 {
@@ -68,6 +67,7 @@ public:
     double create_random(int maxiter = 3);
 
     virtual void init() {}
+    virtual void after_prognosis() {}
 
     std::string & getName();
 

@@ -32,7 +32,7 @@ int OneClassSVM::res_comp(struct res_auc  p1, struct res_auc  p2)
 
 OneClassSVM::OneClassSVM() : Machine("1-SVM")
 {
-    std::cout << "One Class SVM is loaded." << std::endl;
+    std::cerr << "One Class SVM is loaded." << std::endl;
 
     param.svm_type = ONE_CLASS;
     param.kernel_type = PRECOMPUTED;
@@ -60,9 +60,8 @@ OneClassSVM::OneClassSVM() : Machine("1-SVM")
     lp = NULL;
     mp = NULL;
 
-    gp = popen(GNUPLOT,"w"); /* 'gp' is the pipe descriptor */
-    if(gp == NULL)
-        fprintf(stderr, "Error init gnuplot\n");
+    tested = 0;
+    active = 0;
 
 }
 
@@ -351,7 +350,7 @@ bool OneClassSVM::load(FILE * fp)
 {
 
     fscanf(fp, "Threshold: %lf\n", &m_threshold);
-    printf("Threshold: %g\n", m_threshold);
+    fprintf(stderr, "Threshold: %g\n", m_threshold);
 
     //SVM
     real_model = svm_load_model_fp(fp);
@@ -687,6 +686,11 @@ void OneClassSVM::predict_decoys()
     svm_destroy_param(&param);
 }
 
+void OneClassSVM::after_prognosis()
+{
+    fprintf(stdout, "Screened %ld, found %ld actives.\n", tested, active);
+}
+
 bool OneClassSVM::predict(OBMol * mol)
 {
 
@@ -727,7 +731,13 @@ bool OneClassSVM::predict(OBMol * mol)
     }*/
 
     double y  = svm_predict(real_model, testing);
-    printf("%g\n", y);
+
+    tested++;
+    if(y >= m_threshold)
+    {
+        printf( "%10s\t%+.5f\n", mol->GetTitle(), y);
+        active++;
+    }
 
     free(testing);
 }

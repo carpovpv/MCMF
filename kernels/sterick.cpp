@@ -38,6 +38,8 @@ StericKernelK::StericKernelK() : CKernel("StericK")
     }
     */
 
+    kerncode = D_STERICK;
+
     std::map < int, double > temp;
 
     temp[Atom_H] = 0.042;

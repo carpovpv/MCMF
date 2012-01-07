@@ -24,6 +24,7 @@ GaussKernel::GaussKernel(DescriptorFactory * descr) : CKernel("Gaussian", descr)
 {
     if(descr==NULL)
         throw KernelFailed("Gauss kernel implies a descriptor!");
+    kerncode = D_GAUSS;
 }
 
 double GaussKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma, Mode regime)

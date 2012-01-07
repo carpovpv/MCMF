@@ -24,6 +24,14 @@ DescriptorFactory::DescriptorFactory(const std::string & name)
     :m_name(name)
 {
     fprintf(stderr, "Loading %s.\n", name.c_str());
+    descrcode = D_UNKNOWNDESCR;
+    prev = -1;
+    prognosis = false;
+}
+
+void DescriptorFactory::setPrognosis(bool ok)
+{
+    prognosis = ok;
 }
 
 void DescriptorFactory::load(FILE *fp)
@@ -33,7 +41,7 @@ void DescriptorFactory::load(FILE *fp)
 
 void DescriptorFactory::save(FILE *fp) const
 {
-    fprintf(fp,"%s: %d\n", m_name.c_str(), descrnames.size() );
+    fprintf(fp,"Descriptors: %d (%s)\n%d ", descrcode, m_name.c_str(), descrnames.size() );
     for(int i =0; i< descrnames.size(); ++i)
         fprintf(fp, "%s ", descrnames[i].c_str());
     fprintf(fp, "\n");

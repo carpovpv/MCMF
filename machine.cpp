@@ -34,6 +34,7 @@ Machine::Machine(const std::string & name) : m_name(name)
     fres = NULL;
     m_CV = 10;
     reallast = false;
+
 }
 
 void Machine::setOutput(FILE * f)

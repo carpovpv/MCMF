@@ -1,5 +1,6 @@
 #ifndef PARSER_H
 #define PARSER_H
+
 //Структура с нашими параметрами.
 
 #define D_ELECTROSTATIC 1
@@ -12,6 +13,13 @@
 #define D_LINEAR        8
 #define D_TANIMOTO      9
 #define D_UNKNOWNDESCR  10
+#define D_UNKNOWNKERNEL 11
+#define D_ABRAHAMA      12
+#define D_ABRAHAMB      13
+#define D_ABRAHAME      14
+#define D_ABRAHAMS      15
+#define D_HYDROPHOBICV  16
+#define D_STERICK       17
 
 struct ConditionKernel
 {

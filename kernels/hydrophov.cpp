@@ -40,6 +40,8 @@ HydrophobicKernelV::HydrophobicKernelV() : CKernel("HydrophobicV")
     }
     */
 
+    kerncode = D_HYDROPHOBICV;
+
     hydrophobicity[1] = -0.6771;
     hydrophobicity[2] = -0.4873;
     hydrophobicity[3] = -0.3633;

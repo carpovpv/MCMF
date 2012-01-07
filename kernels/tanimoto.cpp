@@ -25,6 +25,7 @@ TanimotoKernel::TanimotoKernel(DescriptorFactory * descr) : CKernel("Tanimoto", 
 {
     if(descr == NULL)
         throw KernelFailed("Tanimoto kernel implies a descriptor!");
+    kerncode = D_TANIMOTO;
 }
 
 double TanimotoKernel::calculate(OBMol * mol1, OBMol * mol2, double, Mode regime)

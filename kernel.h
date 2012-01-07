@@ -77,6 +77,8 @@ protected:
     std::string m_name;
     DescriptorFactory * m_descrfactory;
 
+    int kerncode;
+
 };
 
 #endif

@@ -23,7 +23,7 @@
 
 StericKernel::StericKernel() : CKernel("Steric")
 {
-
+    kerncode = D_STERIC;
 }
 
 double StericKernel::calculate(OBMol * mol1, OBMol * mol2, double gamma, Mode)
