@@ -12,6 +12,7 @@ public:
     Spectrophores();
     ~Spectrophores();
     const std::vector < double > & getDescriptors(OBMol *, Mode mode = Training);
+    void load(FILE *fp);
 
 private:
     OpenBabel::OBSpectrophore s;

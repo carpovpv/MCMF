@@ -11,6 +11,12 @@ Spectrophores::Spectrophores()
     descrcode = D_SPECTROPHORES;
 }
 
+void Spectrophores::load(FILE *fp)
+{
+    char names[255];
+    fgets(names, 255, fp);
+}
+
 Spectrophores::~Spectrophores()
 {
 
