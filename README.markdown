@@ -17,6 +17,7 @@
 Некоторые ядра (первые три) работают с вычисленными дескрипторами молекулярных структур. Остальные ядра - сравнивают структуры непосредственно, минуя стадию вычисления дескрипторов. 
 
 Доступные дескрипторные блоки:
+
 * молекулярные отпечатки (fp2),
 * спектрофоры (spectrophores),
 * многоуровневые атомные окрестности (mna).
@@ -50,10 +51,10 @@
 
 Для компиляции проекта необходимо:
 
-* [OpenBabel](http://openbabel.org/wiki/Main_Page "OpenBabel")
-* [NlOpt] (http://ab-initio.mit.edu/wiki/index.php/NLopt "NlOpt")
-* [Flex] (http://flex.sourceforge.net/)
-* [Bison] (http://www.gnu.org/software/bison/ "Bison")
+* [OpenBabel](http://openbabel.org/wiki/Main_Page "OpenBabel") - общедоступный пакет по хемоинформатике,
+* [NlOpt] (http://ab-initio.mit.edu/wiki/index.php/NLopt "NlOpt") - пакет по методам оптимизации функций,
+* [Flex] (http://flex.sourceforge.net/) - лексический анализатор,
+* [Bison] (http://www.gnu.org/software/bison/ "Bison") - синтаксический анализатор.
 
 В качестве сисетмы сборки используется CMake.
 
