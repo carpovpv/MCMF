@@ -57,6 +57,10 @@
 const int EX_USAGE = 127;
 const int MAX_PARAMS = 20;
 
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 void help()
 {
     std::cout << "The program for building models for virtual screening \n"
@@ -503,6 +507,42 @@ int main(int argc, char ** argv)
     //Launch Yacc to parse command line.
     if(!parse_command_line(params.c_str()))
         return 0;
+     
+    #ifdef WIN32
+   
+    const int MAX_MODULE_NAME = 1024;
+    char modulename[MAX_MODULE_NAME];
+
+    int len = GetModuleFileName(NULL, modulename, 1024);
+    if(len == 0)
+    {
+        fprintf(stderr, "Cannot determine the module path.\n");
+	return EX_USAGE;
+    }
+
+    puts("Set env variables for OpenBabel.");
+
+    char * p = strrchr(modulename, '\\');
+    if( p == NULL )
+    {
+        fprintf(stderr, "Cannot analyze module's name.\n");
+	return EX_USAGE;
+    }
+
+    *++p = '\0';
+    
+    len = p - modulename;
+
+    char env_babel_lib[MAX_MODULE_NAME + 30];
+    sprintf(env_babel_lib, "BABEL_LIBDIR=%s/plugins",modulename);
+    putenv(env_babel_lib);
+
+    char env_babel_data[MAX_MODULE_NAME + 30];
+    sprintf(env_babel_data, "BABEL_DATADIR=%s/data",modulename);
+    putenv(env_babel_data);
+   
+
+    #endif
 
     if(cond.help)
     {
