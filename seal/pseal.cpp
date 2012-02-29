@@ -25,7 +25,7 @@ int nprobes = 10;
 
 OBMol *templ;
 
-OBConversion conv;
+OBConversion *conv;
 
 double inline norm(const double *q)
 {
@@ -163,7 +163,7 @@ void *pseal_align(void * pmol)
     double smin = RAND_MAX;
     double sp[7];
 
-    //начало цикла оптимизации
+    //РЅР°С‡Р°Р»Рѕ С†РёРєР»Р° РѕРїС‚РёРјРёР·Р°С†РёРё
 
     std::vector<int> was1, was2;
     for(int l = 0; l < nprobes; ++l)
@@ -232,7 +232,7 @@ void *pseal_align(void * pmol)
         //fprintf(stderr, "Probe: %d\n", l);
     }
 
-    // окончание цикла оптимизации
+    // РѕРєРѕРЅС‡Р°РЅРёРµ С†РёРєР»Р° РѕРїС‚РёРјРёР·Р°С†РёРё
 
 
     double qv[9];
@@ -261,6 +261,42 @@ void *pseal_align(void * pmol)
 int main(int argc , char **argv)
 {
 
+#ifdef WIN32
+    const int MAX_MODULE_NAME = 1024;
+    char modulename[MAX_MODULE_NAME];
+
+    int len = GetModuleFileName(NULL, modulename, 1024);
+    if(len == 0)
+    {
+        fprintf(stderr, "Cannot determine the module path.\n");
+        return 0;
+    }
+
+    //puts("Set env variables for OpenBabel.");
+
+    char * p = strrchr(modulename, '\\');
+    if( p == NULL )
+    {
+        fprintf(stderr, "Cannot analyze module's name.\n");
+        return 0;
+    }
+
+    *++p = '\0';
+
+    len = p - modulename;
+
+    char env_babel_lib[MAX_MODULE_NAME + 30];
+    sprintf(env_babel_lib, "BABEL_LIBDIR=%s/plugins",modulename);
+    putenv(env_babel_lib);
+
+    char env_babel_data[MAX_MODULE_NAME + 30];
+    sprintf(env_babel_data, "BABEL_DATADIR=%s/data",modulename);
+    putenv(env_babel_data);
+
+#endif
+
+    conv = new OBConversion();
+
     char * fp = NULL;
     int error =0 ;
 
@@ -287,8 +323,10 @@ int main(int argc , char **argv)
     std::cerr << "Nprobes: " << nprobes << std::endl;
 
 
-    conv.SetInFormat("SDF");
-    conv.SetOutFormat("SDF");
+
+
+    conv->SetInFormat("SDF");
+    conv->SetOutFormat("SDF");
 
     std::ifstream ifs(fp);
     if(!ifs)
@@ -298,11 +336,11 @@ int main(int argc , char **argv)
         return error;
     }
 
-    conv.SetInStream(&ifs);
-    conv.SetOutStream(&std::cout);
+    conv->SetInStream(&ifs);
+    conv->SetOutStream(&std::cout);
 
     templ = new OBMol();
-    if(!conv.Read(templ))
+    if(!conv->Read(templ))
     {
         error++;
         std::cerr << "Can't read the template!" << std::endl;
@@ -316,14 +354,14 @@ int main(int argc , char **argv)
         atom->GetPartialCharge();
 
     ifs.close();
-    conv.SetInStream(&std::cin);
+    conv->SetInStream(&std::cin);
 
-    conv.Write(templ);
+    conv->Write(templ);
 
     OBMol mol, pmol;
     while(true)
     {
-        if(!conv.Read(&pmol))
+        if(!conv->Read(&pmol))
            break;
 
         pmol.DeleteHydrogens();
@@ -332,12 +370,12 @@ int main(int argc , char **argv)
         FOR_ATOMS_OF_MOL(atom, pmol)
             atom->GetPartialCharge();
 
-        if(!conv.Read(&mol))
+        if(!conv->Read(&mol))
         {
             pthread_create(&pt, NULL, pseal_align, &pmol);
             pthread_join(pt, NULL);
             pseal_align(&pmol);
-            conv.Write(&pmol);
+            conv->Write(&pmol);
             break;
         }
 
@@ -350,11 +388,11 @@ int main(int argc , char **argv)
         pthread_create(&pt, NULL, pseal_align, &mol);
 
         pthread_join(thread, NULL);
-        conv.Write(&pmol);
+        conv->Write(&pmol);
 
         pthread_join(pt, NULL);
 
-        conv.Write(&mol);
+        conv->Write(&mol);
 
     }
 
